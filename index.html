@@ -2,58 +2,69 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
-  />
-  <title>AVION Viewer Mobile</title>
-
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tron Aircraft Viewer</title>
   <style>
-    :root{
-      --bg:#070707;
-      --panel:rgba(15,15,15,.82);
-      --line:rgba(255,255,255,.12);
-      --text:#f3f3f3;
-      --muted:#bdbdbd;
-      --accent:rgba(255,255,255,.16);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-left: env(safe-area-inset-left, 0px);
-      --safe-right: env(safe-area-inset-right, 0px);
+    :root {
+      --bg-1: #030303;
+      --bg-2: #0d0d0d;
+      --line: rgba(255, 255, 255, 0.12);
+      --line-strong: rgba(255, 255, 255, 0.24);
+      --text: #f5f5f5;
+      --muted: #bdbdbd;
+      --glow: 0 0 24px rgba(255, 255, 255, 0.1);
+      --radius-xl: 24px;
+      --radius-md: 14px;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: var(--bg);
+      font-family: Inter, Arial, Helvetica, sans-serif;
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, Arial, sans-serif;
-      touch-action: none;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.07), transparent 18%),
+        radial-gradient(circle at 80% 15%, rgba(255,255,255,0.04), transparent 16%),
+        linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
     }
 
-    body {
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    body::before {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(circle at center, black 52%, transparent 100%);
+      opacity: 0.5;
+    }
+
+    body::after {
       background:
-        radial-gradient(circle at 25% 18%, rgba(255,255,255,.06), transparent 20%),
-        radial-gradient(circle at 80% 12%, rgba(255,255,255,.04), transparent 16%),
-        linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+        radial-gradient(circle at center, rgba(255,255,255,0.055), transparent 42%),
+        radial-gradient(circle at center, rgba(255,255,255,0.025), transparent 64%);
+      animation: pulseGlow 5s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 1; }
     }
 
     #app {
-      position: fixed;
-      inset: 0;
+      position: relative;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
     }
 
@@ -63,169 +74,156 @@
       width: 100%;
       height: 100%;
       display: block;
-      touch-action: none;
+      cursor: grab;
     }
 
-    .topbar {
+    #scene:active { cursor: grabbing; }
+
+    .hud {
       position: absolute;
-      left: calc(12px + var(--safe-left));
-      right: calc(12px + var(--safe-right));
-      top: calc(10px + var(--safe-top));
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 10;
+      inset: 0;
       pointer-events: none;
     }
 
-    .card {
+    .glass {
       pointer-events: auto;
-      background: var(--panel);
       backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(18,18,18,0.75), rgba(10,10,10,0.86));
       border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 10px 28px rgba(0,0,0,.28);
+      box-shadow: var(--glow);
     }
 
-    .titleCard {
-      padding: 12px 14px;
+    .title-card,
+    .control-panel,
+    .hint-panel,
+    .status-bar {
+      position: absolute;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .title-card {
+      top: 22px;
+      left: 22px;
+      width: min(400px, calc(100vw - 44px));
+      padding: 20px 22px;
+    }
+
+    .control-panel {
+      top: 22px;
+      right: 22px;
+      width: min(430px, calc(100vw - 44px));
+      max-height: calc(100vh - 44px);
+      overflow: auto;
+      padding: 18px;
+    }
+
+    .hint-panel {
+      left: 22px;
+      bottom: 86px;
+      width: min(500px, calc(100vw - 44px));
+      padding: 14px 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .status-bar {
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      min-height: 48px;
+      padding: 12px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 14px;
+      align-items: center;
     }
 
     .eyebrow {
-      font-size: 11px;
-      letter-spacing: .18em;
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
-      color: #d8d8d8;
-      margin-bottom: 6px;
+      color: #d6d6d6;
+      margin-bottom: 8px;
     }
 
     .title {
       margin: 0;
-      font-size: 20px;
-      line-height: 1.08;
-      font-weight: 700;
+      font-size: clamp(1.6rem, 2.5vw, 2.25rem);
+      line-height: 1.05;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-shadow: 0 0 22px rgba(255,255,255,0.16);
     }
 
     .subtitle {
-      margin: 6px 0 0;
+      margin: 10px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
+      line-height: 1.55;
+      font-size: 0.95rem;
     }
 
-    .controls {
-      display: grid;
-      gap: 10px;
-      padding: 12px;
-    }
+    .panel-grid { display: grid; gap: 14px; }
 
-    .buttonGrid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .buttonGrid2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-
-    button, .fileLabel {
-      min-height: 46px;
-      border-radius: 14px;
+    .control-group {
       border: 1px solid var(--line);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 600;
-      padding: 12px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
+      border-radius: 20px;
+      padding: 14px;
+      background: rgba(255,255,255,0.02);
     }
 
-    button.active {
-      background: rgba(255,255,255,.16);
-      border-color: rgba(255,255,255,.24);
+    .group-title {
+      margin: 0 0 12px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #ebebeb;
     }
 
-    button:active, .fileLabel:active {
-      transform: scale(.98);
-    }
-
-    .fileWrap {
-      display: grid;
-      gap: 8px;
-    }
-
-    .fileLabel {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .fileLabel input {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .bottomPanel {
-      position: absolute;
-      left: calc(12px + var(--safe-left));
-      right: calc(12px + var(--safe-right));
-      bottom: calc(12px + var(--safe-bottom));
-      z-index: 10;
+    .row {
       display: grid;
       gap: 10px;
-      pointer-events: none;
+      margin-bottom: 12px;
     }
 
-    .statusCard, .sliderCard {
-      pointer-events: auto;
-      padding: 12px 14px;
-    }
+    .row:last-child { margin-bottom: 0; }
 
-    .statusText {
-      font-size: 13px;
-      line-height: 1.35;
-      color: #efefef;
-      margin-bottom: 8px;
-      word-break: break-word;
-    }
-
-    .statusMeta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 14px;
-      font-size: 12px;
+    .row label,
+    .coord-label {
+      font-size: 0.92rem;
       color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
     }
 
-    .statusMeta strong {
+    .value,
+    .stat strong {
       color: var(--text);
       font-variant-numeric: tabular-nums;
     }
 
-    .sliderRow {
-      display: grid;
-      gap: 8px;
+    .file-help {
+      font-size: 0.82rem;
+      color: #cfcfcf;
+      opacity: 0.85;
+      line-height: 1.45;
     }
 
-    .sliderRow label {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      font-size: 13px;
+    input[type="file"],
+    input[type="number"] {
+      width: 100%;
       color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
     }
 
-    .sliderRow span {
+    input[type="number"] {
       color: var(--text);
-      font-weight: 600;
+      font-variant-numeric: tabular-nums;
     }
 
     input[type="range"] {
@@ -233,105 +231,309 @@
       appearance: none;
       height: 8px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #202020, #fafafa, #202020);
+      background: linear-gradient(90deg, #1f1f1f, #ffffff, #1f1f1f);
       outline: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
     }
 
     input[type="range"]::-webkit-slider-thumb {
       appearance: none;
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: #fff;
-      border: 2px solid #111;
-      box-shadow: 0 0 12px rgba(255,255,255,.25);
+      border: 2px solid #0e0e0e;
+      box-shadow: 0 0 18px rgba(255,255,255,0.35);
+      cursor: pointer;
     }
 
-    .miniHint {
-      font-size: 12px;
+    .button-row,
+    .mode-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .button-row-2 {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .coord-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .coord-row {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .coord-inputs {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      color: var(--text);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: 0 0 18px rgba(255,255,255,0.1);
+    }
+
+    button.active {
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+      border-color: rgba(255,255,255,0.3);
+      box-shadow: 0 0 18px rgba(255,255,255,0.12);
+    }
+
+    .status-text {
+      color: #ededed;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stat {
       color: var(--muted);
-      line-height: 1.35;
+      font-size: 0.9rem;
     }
 
-    @media (min-width: 768px) {
-      .topbar {
-        left: 18px;
-        right: auto;
-        width: 360px;
-      }
+    .crosshair,
+    .ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
 
-      .bottomPanel {
-        left: 18px;
-        right: 18px;
+    .crosshair {
+      width: 150px;
+      height: 150px;
+      opacity: 0.34;
+    }
+
+    .crosshair::before,
+    .crosshair::after,
+    .crosshair span::before,
+    .crosshair span::after {
+      content: "";
+      position: absolute;
+      background: rgba(255,255,255,0.45);
+      box-shadow: 0 0 14px rgba(255,255,255,0.18);
+    }
+
+    .crosshair::before,
+    .crosshair::after {
+      left: 50%;
+      width: 1px;
+      height: 42px;
+      transform: translateX(-50%);
+    }
+
+    .crosshair::before { top: 0; }
+    .crosshair::after { bottom: 0; }
+
+    .crosshair span::before,
+    .crosshair span::after {
+      top: 50%;
+      height: 1px;
+      width: 42px;
+      transform: translateY(-50%);
+    }
+
+    .crosshair span::before { left: 0; }
+    .crosshair span::after { right: 0; }
+
+    .ring {
+      width: 340px;
+      height: 340px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 50%;
+      box-shadow: 0 0 28px rgba(255,255,255,0.06), inset 0 0 28px rgba(255,255,255,0.03);
+      animation: rotateSlow 18s linear infinite;
+    }
+
+    .ring::before,
+    .ring::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255,255,255,0.08);
+    }
+
+    .ring::after {
+      inset: 50px;
+      animation: rotateSlowReverse 14s linear infinite;
+    }
+
+    @keyframes rotateSlow {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes rotateSlowReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    @media (max-width: 980px) {
+      html, body { overflow: auto; }
+      #app { min-height: 100vh; }
+      #scene { position: fixed; }
+      .hud {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        align-content: start;
       }
+      .title-card,
+      .control-panel,
+      .hint-panel,
+      .status-bar {
+        position: static;
+        width: 100%;
+      }
+      .status-bar { grid-template-columns: 1fr; }
+      .coord-inputs { grid-template-columns: 1fr; }
+      .ring,
+      .crosshair { display: none; }
     }
   </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="app">
     <canvas id="scene"></canvas>
 
-    <div class="topbar">
-      <div class="card titleCard">
-        <div class="eyebrow">Mobile STL Viewer</div>
-        <h1 class="title">AVION Viewer iPhone</h1>
-        <p class="subtitle">Optimizado para tocar, arrastrar y hacer zoom con pellizco.</p>
+    <div class="hud">
+      <section class="title-card glass">
+        <div class="eyebrow">3D Interface</div>
+        <h1 class="title">Tron Aircraft Viewer</h1>
+        <p class="subtitle">Ahora con ajuste de coordenadas XYZ y exportación STL.</p>
+      </section>
+
+      <aside class="control-panel glass">
+        <div class="panel-grid">
+          <div class="control-group">
+            <h2 class="group-title">Modelo</h2>
+            <div class="row">
+              <label for="fileInput">Archivo STL <span class="value" id="fileName">AVION.stl</span></label>
+              <input id="fileInput" type="file" accept=".stl" />
+              <div class="file-help">Al abrir la página se intentará cargar AVION.stl automáticamente. Si no funciona, puedes cargarlo manualmente.</div>
+            </div>
+            <div class="button-row">
+              <button id="resetViewBtn" type="button">Recentrar</button>
+              <button id="spinBtn" type="button" class="active">Auto giro</button>
+              <button id="wireBtn" type="button">Wireframe</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2 class="group-title">Ajustes</h2>
+            <div class="row">
+              <label for="scaleSlider">Tamaño <span class="value" id="scaleValue">0.35x</span></label>
+              <input id="scaleSlider" type="range" min="0.35" max="3.2" step="0.01" value="0.35" />
+            </div>
+            <div class="row">
+              <label for="colorSlider">Color <span class="value" id="colorValue">Neutro</span></label>
+              <input id="colorSlider" type="range" min="0" max="360" step="1" value="0" />
+            </div>
+            <div class="row">
+              <label for="lightSlider">Brillo <span class="value" id="lightValue">1.20</span></label>
+              <input id="lightSlider" type="range" min="0.5" max="2.8" step="0.01" value="1.2" />
+            </div>
+            <div class="row">
+              <label for="metalSlider">Metal <span class="value" id="metalValue">0.45</span></label>
+              <input id="metalSlider" type="range" min="0" max="1" step="0.01" value="0.45" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2 class="group-title">Coordenadas XYZ</h2>
+            <div class="coord-grid">
+              <div class="coord-row">
+                <div class="coord-label">Eje X <span class="value" id="coordXLabel">0.00</span></div>
+                <div class="coord-inputs">
+                  <input id="coordXSlider" type="range" min="-500" max="500" step="0.1" value="0" />
+                  <input id="coordXInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="coord-row">
+                <div class="coord-label">Eje Y <span class="value" id="coordYLabel">0.00</span></div>
+                <div class="coord-inputs">
+                  <input id="coordYSlider" type="range" min="-500" max="500" step="0.1" value="0" />
+                  <input id="coordYInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="coord-row">
+                <div class="coord-label">Eje Z <span class="value" id="coordZLabel">0.00</span></div>
+                <div class="coord-inputs">
+                  <input id="coordZSlider" type="range" min="-500" max="500" step="0.1" value="0" />
+                  <input id="coordZInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="button-row-2">
+                <button id="resetCoordsBtn" type="button">Reset XYZ</button>
+                <button id="downloadStlBtn" type="button">Descargar STL</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <h2 class="group-title">Material</h2>
+            <div class="mode-row">
+              <button id="matDefaultBtn" type="button" class="active">Tron</button>
+              <button id="matMatteBtn" type="button">Mate</button>
+              <button id="matChromeBtn" type="button">Chrome</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="hint-panel glass">
+        Controles: clic izquierdo para rotar, rueda para zoom y clic derecho para mover. En XYZ puedes desplazar el modelo visualmente y descargar un nuevo STL con esos offsets aplicados.
       </div>
 
-      <div class="card controls">
-        <div class="fileWrap">
-          <label class="fileLabel">
-            Cargar STL manualmente
-            <input id="fileInput" type="file" accept=".stl" />
-          </label>
-          <div class="miniHint">Al abrir, intentará cargar <strong>AVION.stl</strong> automáticamente.</div>
-        </div>
-
-        <div class="buttonGrid">
-          <button id="resetViewBtn" type="button">Recentrar</button>
-          <button id="spinBtn" type="button" class="active">Auto giro</button>
-          <button id="wireBtn" type="button">Wireframe</button>
-        </div>
-
-        <div class="buttonGrid2">
-          <button id="togglePanelBtn" type="button">Ocultar ajustes</button>
-          <button id="reloadBtn" type="button">Recargar AVION</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="bottomPanel">
-      <div class="card statusCard">
-        <div class="statusText" id="status">Intentando cargar AVION.stl...</div>
-        <div class="statusMeta">
-          <div>Archivo: <strong id="fileName">AVION.stl</strong></div>
-          <div>Escala: <strong id="hudScale">0.35x</strong></div>
-          <div>Color: <strong id="hudColor">Neutro</strong></div>
-          <div>Modo: <strong id="hudMode">Tron</strong></div>
-        </div>
+      <div class="status-bar glass">
+        <div class="status-text" id="status">Intentando cargar AVION.stl...</div>
+        <div class="stat">Escala: <strong id="hudScale">0.35x</strong></div>
+        <div class="stat">Color: <strong id="hudColor">Neutro</strong></div>
+        <div class="stat">Modo: <strong id="hudMode">Tron</strong></div>
       </div>
 
-      <div class="card sliderCard" id="sliderPanel">
-        <div class="sliderRow">
-          <label for="scaleSlider">Tamaño <span id="scaleValue">0.35x</span></label>
-          <input id="scaleSlider" type="range" min="0.35" max="3.2" step="0.01" value="0.35" />
-        </div>
-
-        <div class="sliderRow" style="margin-top: 12px;">
-          <label for="colorSlider">Color <span id="colorValue">Neutro</span></label>
-          <input id="colorSlider" type="range" min="0" max="360" step="1" value="0" />
-        </div>
-
-        <div class="sliderRow" style="margin-top: 12px;">
-          <label for="lightSlider">Brillo <span id="lightValue">1.20</span></label>
-          <input id="lightSlider" type="range" min="0.5" max="2.8" step="0.01" value="1.2" />
-        </div>
-
-        <div class="sliderRow" style="margin-top: 12px;">
-          <label for="metalSlider">Metal <span id="metalValue">0.45</span></label>
-          <input id="metalSlider" type="range" min="0" max="1" step="0.01" value="0.45" />
-        </div>
-      </div>
+      <div class="ring"></div>
+      <div class="crosshair"><span></span></div>
     </div>
   </div>
 
@@ -339,6 +541,7 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+    import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
     const canvas = document.getElementById('scene');
     const fileInput = document.getElementById('fileInput');
@@ -354,9 +557,20 @@
     const resetViewBtn = document.getElementById('resetViewBtn');
     const spinBtn = document.getElementById('spinBtn');
     const wireBtn = document.getElementById('wireBtn');
-    const togglePanelBtn = document.getElementById('togglePanelBtn');
-    const reloadBtn = document.getElementById('reloadBtn');
-    const sliderPanel = document.getElementById('sliderPanel');
+    const matDefaultBtn = document.getElementById('matDefaultBtn');
+    const matMatteBtn = document.getElementById('matMatteBtn');
+    const matChromeBtn = document.getElementById('matChromeBtn');
+    const resetCoordsBtn = document.getElementById('resetCoordsBtn');
+    const downloadStlBtn = document.getElementById('downloadStlBtn');
+    const coordXSlider = document.getElementById('coordXSlider');
+    const coordYSlider = document.getElementById('coordYSlider');
+    const coordZSlider = document.getElementById('coordZSlider');
+    const coordXInput = document.getElementById('coordXInput');
+    const coordYInput = document.getElementById('coordYInput');
+    const coordZInput = document.getElementById('coordZInput');
+    const coordXLabel = document.getElementById('coordXLabel');
+    const coordYLabel = document.getElementById('coordYLabel');
+    const coordZLabel = document.getElementById('coordZLabel');
     const status = document.getElementById('status');
     const hudScale = document.getElementById('hudScale');
     const hudColor = document.getElementById('hudColor');
@@ -367,11 +581,26 @@
     let materialMode = 'Tron';
     let currentMesh = null;
     let currentBaseScale = 1;
-    let panelVisible = true;
+    let currentDisplayBaseY = 0;
+    let rawGeometryForExport = null;
+    let currentLoadedFileName = 'AVION.stl';
+
+    const coordinateOffsets = {
+      x: 0,
+      y: 0,
+      z: 0
+    };
+
+    const AIRCRAFT_ORIENTATION_MATRIX = new THREE.Matrix4().set(
+      0.9955579, -0.0000289, -0.0941515, 0,
+     -0.0007069, -0.9999741, -0.0071677, 0,
+     -0.0941489,  0.0072024, -0.9955321, 0,
+      0,          0,          0,         1
+    );
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050505);
-    scene.fog = new THREE.Fog(0x050505, 20, 180);
+    scene.background = new THREE.Color(0x040404);
+    scene.fog = new THREE.Fog(0x040404, 20, 180);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -388,38 +617,98 @@
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.06;
+    controls.dampingFactor = 0.05;
     controls.screenSpacePanning = true;
-    controls.enablePan = true;
-    controls.rotateSpeed = 0.9;
-    controls.zoomSpeed = 1.1;
-    controls.panSpeed = 0.9;
     controls.minDistance = 0.5;
     controls.maxDistance = 4000;
     controls.target.set(0, 0, 0);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, parseFloat(lightSlider.value));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
-    const fillLight = new THREE.DirectionalLight(0xcfcfcf, 0.75);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const fillLight = new THREE.DirectionalLight(0xcfcfcf, 0.7);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.9);
     keyLight.position.set(150, 220, 180);
     fillLight.position.set(-160, 80, -120);
-    scene.add(ambientLight, keyLight, fillLight);
+    rimLight.position.set(0, 250, -200);
+    scene.add(ambientLight, keyLight, fillLight, rimLight);
 
     const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x666666);
-    grid.material.opacity = 0.08;
+    grid.material.opacity = 0.10;
     grid.material.transparent = true;
     scene.add(grid);
 
+    const floorPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(2000, 2000),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.015,
+        side: THREE.DoubleSide
+      })
+    );
+    floorPlane.rotation.x = -Math.PI / 2;
+    scene.add(floorPlane);
+
     const loader = new STLLoader();
+    const exporter = new STLExporter();
 
     function setStatus(message) {
       status.textContent = message;
     }
 
-    function updateHudScale(value) {
-      const text = `${value.toFixed(2)}x`;
-      scaleValue.textContent = text;
-      hudScale.textContent = text;
+    function clampCoordinate(value) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return 0;
+      return Math.min(500, Math.max(-500, numeric));
+    }
+
+    function updateCoordLabels() {
+      coordXLabel.textContent = coordinateOffsets.x.toFixed(2);
+      coordYLabel.textContent = coordinateOffsets.y.toFixed(2);
+      coordZLabel.textContent = coordinateOffsets.z.toFixed(2);
+    }
+
+    function syncCoordinateControls() {
+      coordXSlider.value = coordinateOffsets.x;
+      coordYSlider.value = coordinateOffsets.y;
+      coordZSlider.value = coordinateOffsets.z;
+      coordXInput.value = coordinateOffsets.x.toFixed(2);
+      coordYInput.value = coordinateOffsets.y.toFixed(2);
+      coordZInput.value = coordinateOffsets.z.toFixed(2);
+      updateCoordLabels();
+    }
+
+    function applyCoordinateOffsetsToMesh() {
+      if (!currentMesh) return;
+
+      currentMesh.position.set(
+        coordinateOffsets.x,
+        currentDisplayBaseY + coordinateOffsets.y,
+        coordinateOffsets.z
+      );
+
+      const finalBox = new THREE.Box3().setFromObject(currentMesh);
+      grid.position.y = finalBox.min.y;
+      floorPlane.position.y = finalBox.min.y - 0.2;
+    }
+
+    function setCoordinate(axis, value) {
+      coordinateOffsets[axis] = clampCoordinate(value);
+      syncCoordinateControls();
+      applyCoordinateOffsetsToMesh();
+    }
+
+    function resetCoordinates() {
+      coordinateOffsets.x = 0;
+      coordinateOffsets.y = 0;
+      coordinateOffsets.z = 0;
+      syncCoordinateControls();
+      applyCoordinateOffsetsToMesh();
+      setStatus('Coordenadas XYZ reiniciadas.');
+    }
+
+    function setActiveButton(group, activeButton) {
+      group.forEach(btn => btn.classList.toggle('active', btn === activeButton));
     }
 
     function hueToLabel(hue) {
@@ -446,6 +735,12 @@
       return { color, label };
     }
 
+    function updateHudScale(value) {
+      const text = `${value.toFixed(2)}x`;
+      scaleValue.textContent = text;
+      hudScale.textContent = text;
+    }
+
     function buildMaterial() {
       return new THREE.MeshPhysicalMaterial({
         color: 0xd8d8d8,
@@ -468,7 +763,19 @@
       material.color.copy(color);
       material.wireframe = wireframe;
 
-      if (materialMode === 'Tron') {
+      if (materialMode === 'Mate') {
+        material.metalness = 0.05;
+        material.roughness = 0.82;
+        material.clearcoat = 0.08;
+        material.clearcoatRoughness = 0.8;
+        material.emissive.copy(color).multiplyScalar(0.04);
+      } else if (materialMode === 'Chrome') {
+        material.metalness = 0.95;
+        material.roughness = 0.18;
+        material.clearcoat = 0.9;
+        material.clearcoatRoughness = 0.08;
+        material.emissive.copy(color).multiplyScalar(0.03);
+      } else {
         material.metalness = metalnessValue;
         material.roughness = 0.32;
         material.clearcoat = 0.35;
@@ -489,15 +796,15 @@
       const maxDim = Math.max(size.x, size.y, size.z) || 1;
       const fov = THREE.MathUtils.degToRad(camera.fov);
       let distance = maxDim / (2 * Math.tan(fov / 2));
-      distance *= 2.0;
+      distance *= 1.8;
 
       camera.near = Math.max(distance / 1000, 0.01);
       camera.far = Math.max(distance * 50, 2000);
       camera.updateProjectionMatrix();
 
       camera.position.set(
-        center.x + distance * 0.2,
-        center.y + distance * 0.28,
+        center.x + distance * 0.22,
+        center.y + distance * 0.30,
         center.z + distance
       );
 
@@ -515,12 +822,7 @@
 
     function applyAircraftOrientation(mesh) {
       mesh.rotation.set(0, 0, 0);
-      mesh.setRotationFromMatrix(new THREE.Matrix4().set(
-        0.9955579, -0.0000289, -0.0941515, 0,
-       -0.0007069, -0.9999741, -0.0071677, 0,
-       -0.0941489,  0.0072024, -0.9955321, 0,
-        0,          0,          0,         1
-      ));
+      mesh.setRotationFromMatrix(AIRCRAFT_ORIENTATION_MATRIX);
     }
 
     function normalizeAndPlaceMesh(mesh) {
@@ -542,33 +844,38 @@
       const maxDim = Math.max(tempSize.x, tempSize.y, tempSize.z) || 1;
 
       currentBaseScale = 120 / maxDim;
-      const userScale = parseFloat(scaleSlider.value);
-      mesh.scale.setScalar(currentBaseScale * userScale);
+      mesh.scale.setScalar(currentBaseScale * parseFloat(scaleSlider.value));
 
+      mesh.position.set(0, 0, 0);
       const placedBox = new THREE.Box3().setFromObject(mesh);
       const placedSize = placedBox.getSize(new THREE.Vector3());
 
-      mesh.position.y = -placedBox.min.y + placedSize.y * 0.02;
-      grid.position.y = placedBox.min.y;
+      currentDisplayBaseY = -placedBox.min.y + placedSize.y * 0.02;
+      applyCoordinateOffsetsToMesh();
     }
 
     function applyScaleOnly() {
       if (!currentMesh) return;
 
       const userScale = parseFloat(scaleSlider.value);
+
       currentMesh.scale.setScalar(currentBaseScale * userScale);
+      currentMesh.position.set(0, 0, 0);
 
       const box = new THREE.Box3().setFromObject(currentMesh);
       const size = box.getSize(new THREE.Vector3());
 
-      currentMesh.position.y = -box.min.y + size.y * 0.02;
-      grid.position.y = box.min.y;
+      currentDisplayBaseY = -box.min.y + size.y * 0.02;
+      applyCoordinateOffsetsToMesh();
 
       updateHudScale(userScale);
     }
 
     function buildMesh(geometry, displayName = 'modelo.stl') {
       clearCurrentMesh();
+
+      rawGeometryForExport = geometry.clone();
+      currentLoadedFileName = displayName;
 
       const mesh = new THREE.Mesh(geometry, buildMaterial());
       currentMesh = mesh;
@@ -617,10 +924,62 @@
 
       file.arrayBuffer()
         .then(buffer => loadGeometryFromArrayBuffer(buffer, file.name))
-        .catch(error => {
+        .catch((error) => {
           console.error(error);
-          setStatus('No se pudo cargar el STL manual.');
+          setStatus('No se pudo cargar el STL. Selecciona un archivo válido.');
         });
+    }
+
+    function buildAdjustedExportGeometry() {
+      if (!rawGeometryForExport) return null;
+
+      const exportGeometry = rawGeometryForExport.clone();
+      exportGeometry.computeBoundingBox();
+
+      const center = exportGeometry.boundingBox.getCenter(new THREE.Vector3());
+      exportGeometry.translate(-center.x, -center.y, -center.z);
+      exportGeometry.applyMatrix4(AIRCRAFT_ORIENTATION_MATRIX);
+      exportGeometry.translate(
+        coordinateOffsets.x,
+        coordinateOffsets.y,
+        coordinateOffsets.z
+      );
+      exportGeometry.computeVertexNormals();
+
+      return exportGeometry;
+    }
+
+    function downloadAdjustedStl() {
+      if (!rawGeometryForExport) {
+        setStatus('Primero carga un STL.');
+        return;
+      }
+
+      try {
+        const exportGeometry = buildAdjustedExportGeometry();
+        const exportMesh = new THREE.Mesh(exportGeometry, new THREE.MeshBasicMaterial());
+        const stlString = exporter.parse(exportMesh, { binary: false });
+
+        const blob = new Blob([stlString], { type: 'model/stl' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        const baseName = currentLoadedFileName.replace(/\.stl$/i, '') || 'modelo';
+        link.href = url;
+        link.download = `${baseName}_XYZ_ajustado.stl`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+        exportGeometry.dispose();
+        exportMesh.material.dispose();
+
+        setStatus('STL ajustado descargado correctamente.');
+      } catch (error) {
+        console.error(error);
+        setStatus('No se pudo exportar el STL ajustado.');
+      }
     }
 
     async function tryAutoLoadDefaultModel() {
@@ -639,12 +998,21 @@
       } catch (error) {
         console.error('Autocarga falló:', error);
         fileName.textContent = 'Ninguno';
-        setStatus('No se pudo cargar AVION.stl automáticamente. Usa el botón de carga manual.');
+        setStatus('No se pudo cargar AVION.stl automáticamente. Puedes cargarlo manualmente.');
       }
     }
 
-    fileInput.addEventListener('change', event => {
+    fileInput.addEventListener('change', (event) => {
       handleFile(event.target.files?.[0]);
+    });
+
+    window.addEventListener('dragover', (event) => {
+      event.preventDefault();
+    });
+
+    window.addEventListener('drop', (event) => {
+      event.preventDefault();
+      handleFile(event.dataTransfer?.files?.[0]);
     });
 
     scaleSlider.addEventListener('input', () => {
@@ -667,6 +1035,22 @@
     });
     metalValue.textContent = parseFloat(metalSlider.value).toFixed(2);
 
+    coordXSlider.addEventListener('input', () => setCoordinate('x', coordXSlider.value));
+    coordYSlider.addEventListener('input', () => setCoordinate('y', coordYSlider.value));
+    coordZSlider.addEventListener('input', () => setCoordinate('z', coordZSlider.value));
+
+    coordXInput.addEventListener('input', () => setCoordinate('x', coordXInput.value));
+    coordYInput.addEventListener('input', () => setCoordinate('y', coordYInput.value));
+    coordZInput.addEventListener('input', () => setCoordinate('z', coordZInput.value));
+
+    resetCoordsBtn.addEventListener('click', () => {
+      resetCoordinates();
+    });
+
+    downloadStlBtn.addEventListener('click', () => {
+      downloadAdjustedStl();
+    });
+
     resetViewBtn.addEventListener('click', () => {
       if (!currentMesh) return;
       fitCameraToObject(currentMesh);
@@ -686,14 +1070,27 @@
       setStatus(wireframe ? 'Wireframe activado.' : 'Wireframe desactivado.');
     });
 
-    togglePanelBtn.addEventListener('click', () => {
-      panelVisible = !panelVisible;
-      sliderPanel.style.display = panelVisible ? 'block' : 'none';
-      togglePanelBtn.textContent = panelVisible ? 'Ocultar ajustes' : 'Mostrar ajustes';
+    const materialButtons = [matDefaultBtn, matMatteBtn, matChromeBtn];
+
+    matDefaultBtn.addEventListener('click', () => {
+      materialMode = 'Tron';
+      setActiveButton(materialButtons, matDefaultBtn);
+      applyMaterialStyle();
+      setStatus('Material Tron aplicado.');
     });
 
-    reloadBtn.addEventListener('click', () => {
-      tryAutoLoadDefaultModel();
+    matMatteBtn.addEventListener('click', () => {
+      materialMode = 'Mate';
+      setActiveButton(materialButtons, matMatteBtn);
+      applyMaterialStyle();
+      setStatus('Material mate aplicado.');
+    });
+
+    matChromeBtn.addEventListener('click', () => {
+      materialMode = 'Chrome';
+      setActiveButton(materialButtons, matChromeBtn);
+      applyMaterialStyle();
+      setStatus('Material chrome aplicado.');
     });
 
     window.addEventListener('resize', () => {
@@ -711,7 +1108,7 @@
       const delta = clock.getDelta();
 
       if (currentMesh && autoSpin) {
-        currentMesh.rotation.z += delta * 0.30;
+        currentMesh.rotation.z += delta * 0.33;
       }
 
       controls.update();
@@ -720,6 +1117,7 @@
 
     updateHudScale(parseFloat(scaleSlider.value));
     getToneColor();
+    syncCoordinateControls();
     animate();
     tryAutoLoadDefaultModel();
   </script>
