@@ -3,18 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tron Aircraft Viewer</title>
+  <title>Aircraft STL Viewer Pro</title>
+
   <style>
     :root {
-      --bg-1: #030303;
-      --bg-2: #0d0d0d;
-      --line: rgba(255, 255, 255, 0.12);
-      --line-strong: rgba(255, 255, 255, 0.24);
+      --bg: #090909;
+      --bg-2: #121212;
+      --panel: rgba(20,20,20,0.86);
+      --panel-2: rgba(255,255,255,0.03);
+      --line: rgba(255,255,255,0.10);
+      --line-strong: rgba(255,255,255,0.20);
       --text: #f5f5f5;
       --muted: #bdbdbd;
-      --glow: 0 0 24px rgba(255, 255, 255, 0.1);
-      --radius-xl: 24px;
-      --radius-md: 14px;
+      --accent: #ffffff;
+      --shadow: 0 16px 40px rgba(0,0,0,0.35);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
     }
 
     * { box-sizing: border-box; }
@@ -23,49 +28,19 @@
       margin: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
-      font-family: Inter, Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 22%),
+        radial-gradient(circle at top right, rgba(255,255,255,0.035), transparent 20%),
+        linear-gradient(180deg, #111 0%, #050505 100%);
       color: var(--text);
-      background:
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.07), transparent 18%),
-        radial-gradient(circle at 80% 15%, rgba(255,255,255,0.04), transparent 16%),
-        linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
-    }
-
-    body::before,
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    body::before {
-      background-image:
-        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-      background-size: 42px 42px;
-      mask-image: radial-gradient(circle at center, black 52%, transparent 100%);
-      opacity: 0.5;
-    }
-
-    body::after {
-      background:
-        radial-gradient(circle at center, rgba(255,255,255,0.055), transparent 42%),
-        radial-gradient(circle at center, rgba(255,255,255,0.025), transparent 64%);
-      animation: pulseGlow 5s ease-in-out infinite;
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.85; }
-      50% { opacity: 1; }
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      overflow: hidden;
     }
 
     #app {
       position: relative;
       width: 100%;
       height: 100%;
-      overflow: hidden;
     }
 
     #scene {
@@ -79,6 +54,26 @@
 
     #scene:active { cursor: grabbing; }
 
+    #axesViewport {
+      position: absolute;
+      left: 18px;
+      bottom: 86px;
+      width: 150px;
+      height: 150px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(18,18,18,0.78), rgba(10,10,10,0.88));
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 4;
+    }
+
+    #axesViewport.hidden {
+      display: none;
+    }
+
     .hud {
       position: absolute;
       inset: 0;
@@ -87,15 +82,14 @@
 
     .glass {
       pointer-events: auto;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(180deg, rgba(18,18,18,0.75), rgba(10,10,10,0.86));
+      background: linear-gradient(180deg, rgba(18,18,18,0.84), rgba(10,10,10,0.92));
       border: 1px solid var(--line);
-      box-shadow: var(--glow);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
     }
 
     .title-card,
     .control-panel,
-    .hint-panel,
     .status-bar {
       position: absolute;
       border-radius: var(--radius-xl);
@@ -103,127 +97,121 @@
     }
 
     .title-card {
-      top: 22px;
-      left: 22px;
-      width: min(400px, calc(100vw - 44px));
-      padding: 20px 22px;
+      top: 18px;
+      left: 18px;
+      width: min(360px, calc(100vw - 36px));
+      padding: 18px 20px;
+      z-index: 5;
     }
 
     .control-panel {
-      top: 22px;
-      right: 22px;
-      width: min(430px, calc(100vw - 44px));
-      max-height: calc(100vh - 44px);
+      top: 18px;
+      right: 18px;
+      width: min(430px, calc(100vw - 36px));
+      height: calc(100vh - 96px);
       overflow: auto;
-      padding: 18px;
-    }
-
-    .hint-panel {
-      left: 22px;
-      bottom: 86px;
-      width: min(500px, calc(100vw - 44px));
-      padding: 14px 16px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.55;
+      padding: 16px;
+      z-index: 5;
     }
 
     .status-bar {
-      left: 22px;
-      right: 22px;
-      bottom: 22px;
-      min-height: 48px;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      min-height: 50px;
       padding: 12px 16px;
       display: grid;
       grid-template-columns: 1fr auto auto auto;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
+      z-index: 5;
     }
 
     .eyebrow {
       font-size: 0.72rem;
-      letter-spacing: 0.28em;
       text-transform: uppercase;
-      color: #d6d6d6;
+      letter-spacing: 0.26em;
+      color: #d8d8d8;
       margin-bottom: 8px;
     }
 
     .title {
       margin: 0;
-      font-size: clamp(1.6rem, 2.5vw, 2.25rem);
-      line-height: 1.05;
-      letter-spacing: 0.08em;
+      font-size: clamp(1.35rem, 2.1vw, 2rem);
       text-transform: uppercase;
-      text-shadow: 0 0 22px rgba(255,255,255,0.16);
+      letter-spacing: 0.08em;
+      line-height: 1.05;
     }
 
     .subtitle {
       margin: 10px 0 0;
+      font-size: 0.93rem;
       color: var(--muted);
-      line-height: 1.55;
-      font-size: 0.95rem;
+      line-height: 1.5;
     }
 
-    .panel-grid { display: grid; gap: 14px; }
+    .panel-grid {
+      display: grid;
+      gap: 14px;
+    }
 
     .control-group {
+      border-radius: 18px;
       border: 1px solid var(--line);
-      border-radius: 20px;
+      background: var(--panel-2);
       padding: 14px;
-      background: rgba(255,255,255,0.02);
     }
 
     .group-title {
       margin: 0 0 12px;
-      font-size: 0.82rem;
+      font-size: 0.80rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: #ebebeb;
+      color: #efefef;
     }
 
     .row {
       display: grid;
-      gap: 10px;
+      gap: 9px;
       margin-bottom: 12px;
     }
 
     .row:last-child { margin-bottom: 0; }
 
-    .row label,
-    .coord-label {
-      font-size: 0.92rem;
-      color: var(--muted);
+    label,
+    .mini-label {
       display: flex;
       justify-content: space-between;
       gap: 12px;
+      font-size: 0.9rem;
+      color: var(--muted);
     }
 
-    .value,
-    .stat strong {
+    .value {
       color: var(--text);
       font-variant-numeric: tabular-nums;
     }
 
     .file-help {
+      color: var(--muted);
       font-size: 0.82rem;
-      color: #cfcfcf;
-      opacity: 0.85;
       line-height: 1.45;
     }
 
     input[type="file"],
     input[type="number"] {
       width: 100%;
-      color: var(--muted);
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--line);
+      color: var(--text);
       border-radius: var(--radius-md);
       padding: 10px 12px;
+      outline: none;
     }
 
-    input[type="number"] {
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
+    input[type="number"]:focus,
+    input[type="file"]:focus {
+      border-color: var(--line-strong);
     }
 
     input[type="range"] {
@@ -231,77 +219,86 @@
       appearance: none;
       height: 8px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #1f1f1f, #ffffff, #1f1f1f);
+      background: linear-gradient(90deg, #1e1e1e, #ffffff, #1e1e1e);
       outline: none;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      border: none;
     }
 
     input[type="range"]::-webkit-slider-thumb {
       appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
       border-radius: 50%;
       background: #fff;
-      border: 2px solid #0e0e0e;
-      box-shadow: 0 0 18px rgba(255,255,255,0.35);
+      border: 2px solid #111;
       cursor: pointer;
-    }
-
-    .button-row,
-    .mode-row {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .button-row-2 {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .coord-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .coord-row {
-      display: grid;
-      gap: 8px;
-      padding: 10px;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px;
-      background: rgba(255,255,255,0.02);
-    }
-
-    .coord-inputs {
-      display: grid;
-      grid-template-columns: 1fr 120px;
-      gap: 10px;
-      align-items: center;
+      box-shadow: 0 0 16px rgba(255,255,255,0.28);
     }
 
     button {
       border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 11px 10px;
       background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
       color: var(--text);
-      border-radius: var(--radius-md);
-      padding: 12px 10px;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      transition: 0.18s ease;
     }
 
     button:hover {
       transform: translateY(-1px);
       border-color: var(--line-strong);
-      box-shadow: 0 0 18px rgba(255,255,255,0.1);
+      box-shadow: 0 0 16px rgba(255,255,255,0.08);
     }
 
     button.active {
       background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
-      border-color: rgba(255,255,255,0.3);
-      box-shadow: 0 0 18px rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .button-row-2,
+    .button-row-3 {
+      display: grid;
+      gap: 10px;
+    }
+
+    .button-row-2 { grid-template-columns: repeat(2, 1fr); }
+    .button-row-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .axis-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .axis-row {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(255,255,255,0.02);
+      display: grid;
+      gap: 8px;
+    }
+
+    .axis-inputs {
+      display: grid;
+      grid-template-columns: 1fr 110px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .subsection-title {
+      margin: 2px 0 8px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #dcdcdc;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 8px 0 4px;
     }
 
     .status-text {
@@ -316,19 +313,15 @@
       font-size: 0.9rem;
     }
 
-    .crosshair,
-    .ring {
+    .crosshair {
       position: absolute;
       left: 50%;
       top: 50%;
+      width: 120px;
+      height: 120px;
       transform: translate(-50%, -50%);
       pointer-events: none;
-    }
-
-    .crosshair {
-      width: 150px;
-      height: 150px;
-      opacity: 0.34;
+      opacity: 0.25;
     }
 
     .crosshair::before,
@@ -337,15 +330,14 @@
     .crosshair span::after {
       content: "";
       position: absolute;
-      background: rgba(255,255,255,0.45);
-      box-shadow: 0 0 14px rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.42);
     }
 
     .crosshair::before,
     .crosshair::after {
       left: 50%;
       width: 1px;
-      height: 42px;
+      height: 34px;
       transform: translateX(-50%);
     }
 
@@ -356,67 +348,43 @@
     .crosshair span::after {
       top: 50%;
       height: 1px;
-      width: 42px;
+      width: 34px;
       transform: translateY(-50%);
     }
 
     .crosshair span::before { left: 0; }
     .crosshair span::after { right: 0; }
 
-    .ring {
-      width: 340px;
-      height: 340px;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 50%;
-      box-shadow: 0 0 28px rgba(255,255,255,0.06), inset 0 0 28px rgba(255,255,255,0.03);
-      animation: rotateSlow 18s linear infinite;
-    }
-
-    .ring::before,
-    .ring::after {
-      content: "";
-      position: absolute;
-      inset: 18px;
-      border-radius: 50%;
-      border: 1px dashed rgba(255,255,255,0.08);
-    }
-
-    .ring::after {
-      inset: 50px;
-      animation: rotateSlowReverse 14s linear infinite;
-    }
-
-    @keyframes rotateSlow {
-      from { transform: translate(-50%, -50%) rotate(0deg); }
-      to { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    @keyframes rotateSlowReverse {
-      from { transform: rotate(360deg); }
-      to { transform: rotate(0deg); }
-    }
-
     @media (max-width: 980px) {
       html, body { overflow: auto; }
       #app { min-height: 100vh; }
       #scene { position: fixed; }
+
       .hud {
         display: grid;
         gap: 12px;
-        padding: 16px;
+        padding: 12px;
         align-content: start;
       }
+
       .title-card,
       .control-panel,
-      .hint-panel,
       .status-bar {
         position: static;
         width: 100%;
+        height: auto;
       }
+
       .status-bar { grid-template-columns: 1fr; }
-      .coord-inputs { grid-template-columns: 1fr; }
-      .ring,
+      .axis-inputs { grid-template-columns: 1fr; }
       .crosshair { display: none; }
+
+      #axesViewport {
+        width: 110px;
+        height: 110px;
+        left: 12px;
+        bottom: 12px;
+      }
     }
   </style>
 
@@ -432,107 +400,175 @@
 <body>
   <div id="app">
     <canvas id="scene"></canvas>
+    <div id="axesViewport"></div>
 
     <div class="hud">
       <section class="title-card glass">
-        <div class="eyebrow">3D Interface</div>
-        <h1 class="title">Tron Aircraft Viewer</h1>
-        <p class="subtitle">Ahora con ajuste de coordenadas XYZ y exportación STL.</p>
+        <div class="eyebrow">3D STL Editor</div>
+        <h1 class="title">Aircraft Viewer Pro</h1>
+        <p class="subtitle">
+          Ajusta el modelo en 9 ejes: posición, rotación y escala en X, Y y Z.
+          También puedes visualizar los ejes XYZ y exportar el STL transformado.
+        </p>
       </section>
 
       <aside class="control-panel glass">
         <div class="panel-grid">
+
           <div class="control-group">
             <h2 class="group-title">Modelo</h2>
             <div class="row">
               <label for="fileInput">Archivo STL <span class="value" id="fileName">AVION.stl</span></label>
               <input id="fileInput" type="file" accept=".stl" />
-              <div class="file-help">Al abrir la página se intentará cargar AVION.stl automáticamente. Si no funciona, puedes cargarlo manualmente.</div>
+              <div class="file-help">
+                Se intentará cargar <strong>AVION.stl</strong> automáticamente. Si no funciona, puedes cargarlo manualmente.
+              </div>
             </div>
-            <div class="button-row">
+
+            <div class="button-row-2">
               <button id="resetViewBtn" type="button">Recentrar</button>
               <button id="spinBtn" type="button" class="active">Auto giro</button>
+            </div>
+
+            <div class="button-row-2" style="margin-top:10px;">
               <button id="wireBtn" type="button">Wireframe</button>
+              <button id="axesBtn" type="button" class="active">Ejes XYZ</button>
             </div>
           </div>
 
           <div class="control-group">
-            <h2 class="group-title">Ajustes</h2>
+            <h2 class="group-title">Visual</h2>
+
             <div class="row">
-              <label for="scaleSlider">Tamaño <span class="value" id="scaleValue">0.35x</span></label>
-              <input id="scaleSlider" type="range" min="0.35" max="3.2" step="0.01" value="0.35" />
+              <label for="uniformScaleSlider">Escala general <span class="value" id="uniformScaleValue">1.00x</span></label>
+              <input id="uniformScaleSlider" type="range" min="0.2" max="4" step="0.01" value="1" />
             </div>
+
             <div class="row">
               <label for="colorSlider">Color <span class="value" id="colorValue">Neutro</span></label>
               <input id="colorSlider" type="range" min="0" max="360" step="1" value="0" />
             </div>
+
             <div class="row">
               <label for="lightSlider">Brillo <span class="value" id="lightValue">1.20</span></label>
-              <input id="lightSlider" type="range" min="0.5" max="2.8" step="0.01" value="1.2" />
+              <input id="lightSlider" type="range" min="0.4" max="3" step="0.01" value="1.2" />
             </div>
+
             <div class="row">
               <label for="metalSlider">Metal <span class="value" id="metalValue">0.45</span></label>
               <input id="metalSlider" type="range" min="0" max="1" step="0.01" value="0.45" />
             </div>
-          </div>
 
-          <div class="control-group">
-            <h2 class="group-title">Coordenadas XYZ</h2>
-            <div class="coord-grid">
-              <div class="coord-row">
-                <div class="coord-label">Eje X <span class="value" id="coordXLabel">0.00</span></div>
-                <div class="coord-inputs">
-                  <input id="coordXSlider" type="range" min="-500" max="500" step="0.1" value="0" />
-                  <input id="coordXInput" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-
-              <div class="coord-row">
-                <div class="coord-label">Eje Y <span class="value" id="coordYLabel">0.00</span></div>
-                <div class="coord-inputs">
-                  <input id="coordYSlider" type="range" min="-500" max="500" step="0.1" value="0" />
-                  <input id="coordYInput" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-
-              <div class="coord-row">
-                <div class="coord-label">Eje Z <span class="value" id="coordZLabel">0.00</span></div>
-                <div class="coord-inputs">
-                  <input id="coordZSlider" type="range" min="-500" max="500" step="0.1" value="0" />
-                  <input id="coordZInput" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-
-              <div class="button-row-2">
-                <button id="resetCoordsBtn" type="button">Reset XYZ</button>
-                <button id="downloadStlBtn" type="button">Descargar STL</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="control-group">
-            <h2 class="group-title">Material</h2>
-            <div class="mode-row">
+            <div class="button-row-3">
               <button id="matDefaultBtn" type="button" class="active">Tron</button>
               <button id="matMatteBtn" type="button">Mate</button>
               <button id="matChromeBtn" type="button">Chrome</button>
             </div>
           </div>
+
+          <div class="control-group">
+            <h2 class="group-title">Transformaciones</h2>
+
+            <div class="subsection-title">Posición</div>
+            <div class="axis-grid">
+              <div class="axis-row">
+                <div class="mini-label">X <span class="value" id="posXLabel">0.00</span></div>
+                <div class="axis-inputs">
+                  <input id="posXSlider" type="range" min="-500" max="500" step="0.1" value="0" />
+                  <input id="posXInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="axis-row">
+                <div class="mini-label">Y <span class="value" id="posYLabel">0.00</span></div>
+                <div class="axis-inputs">
+                  <input id="posYSlider" type="range" min="-500" max="500" step="0.1" value="0" />
+                  <input id="posYInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="axis-row">
+                <div class="mini-label">Z <span class="value" id="posZLabel">0.00</span></div>
+                <div class="axis-inputs">
+                  <input id="posZSlider" type="range" min="-500" max="500" step="0.1" value="0" />
+                  <input id="posZInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="subsection-title">Rotación (grados)</div>
+
+            <div class="axis-grid">
+              <div class="axis-row">
+                <div class="mini-label">Rot X <span class="value" id="rotXLabel">0.00°</span></div>
+                <div class="axis-inputs">
+                  <input id="rotXSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                  <input id="rotXInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="axis-row">
+                <div class="mini-label">Rot Y <span class="value" id="rotYLabel">0.00°</span></div>
+                <div class="axis-inputs">
+                  <input id="rotYSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                  <input id="rotYInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+
+              <div class="axis-row">
+                <div class="mini-label">Rot Z <span class="value" id="rotZLabel">0.00°</span></div>
+                <div class="axis-inputs">
+                  <input id="rotZSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                  <input id="rotZInput" type="number" step="0.1" value="0" />
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="subsection-title">Escala por eje</div>
+
+            <div class="axis-grid">
+              <div class="axis-row">
+                <div class="mini-label">Scale X <span class="value" id="scaleXLabel">1.00</span></div>
+                <div class="axis-inputs">
+                  <input id="scaleXSlider" type="range" min="0.1" max="5" step="0.01" value="1" />
+                  <input id="scaleXInput" type="number" step="0.01" value="1" />
+                </div>
+              </div>
+
+              <div class="axis-row">
+                <div class="mini-label">Scale Y <span class="value" id="scaleYLabel">1.00</span></div>
+                <div class="axis-inputs">
+                  <input id="scaleYSlider" type="range" min="0.1" max="5" step="0.01" value="1" />
+                  <input id="scaleYInput" type="number" step="0.01" value="1" />
+                </div>
+              </div>
+
+              <div class="axis-row">
+                <div class="mini-label">Scale Z <span class="value" id="scaleZLabel">1.00</span></div>
+                <div class="axis-inputs">
+                  <input id="scaleZSlider" type="range" min="0.1" max="5" step="0.01" value="1" />
+                  <input id="scaleZInput" type="number" step="0.01" value="1" />
+                </div>
+              </div>
+            </div>
+
+            <div class="button-row-2" style="margin-top:12px;">
+              <button id="resetTransformsBtn" type="button">Reset transformaciones</button>
+              <button id="downloadStlBtn" type="button">Descargar STL</button>
+            </div>
+          </div>
         </div>
       </aside>
 
-      <div class="hint-panel glass">
-        Controles: clic izquierdo para rotar, rueda para zoom y clic derecho para mover. En XYZ puedes desplazar el modelo visualmente y descargar un nuevo STL con esos offsets aplicados.
-      </div>
-
       <div class="status-bar glass">
         <div class="status-text" id="status">Intentando cargar AVION.stl...</div>
-        <div class="stat">Escala: <strong id="hudScale">0.35x</strong></div>
-        <div class="stat">Color: <strong id="hudColor">Neutro</strong></div>
+        <div class="stat">Archivo: <strong id="hudFile">AVION.stl</strong></div>
+        <div class="stat">Escala general: <strong id="hudScale">1.00x</strong></div>
         <div class="stat">Modo: <strong id="hudMode">Tron</strong></div>
       </div>
 
-      <div class="ring"></div>
       <div class="crosshair"><span></span></div>
     </div>
   </div>
@@ -543,54 +579,6 @@
     import { STLLoader } from 'three/addons/loaders/STLLoader.js';
     import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
-    const canvas = document.getElementById('scene');
-    const fileInput = document.getElementById('fileInput');
-    const fileName = document.getElementById('fileName');
-    const scaleSlider = document.getElementById('scaleSlider');
-    const scaleValue = document.getElementById('scaleValue');
-    const colorSlider = document.getElementById('colorSlider');
-    const colorValue = document.getElementById('colorValue');
-    const lightSlider = document.getElementById('lightSlider');
-    const lightValue = document.getElementById('lightValue');
-    const metalSlider = document.getElementById('metalSlider');
-    const metalValue = document.getElementById('metalValue');
-    const resetViewBtn = document.getElementById('resetViewBtn');
-    const spinBtn = document.getElementById('spinBtn');
-    const wireBtn = document.getElementById('wireBtn');
-    const matDefaultBtn = document.getElementById('matDefaultBtn');
-    const matMatteBtn = document.getElementById('matMatteBtn');
-    const matChromeBtn = document.getElementById('matChromeBtn');
-    const resetCoordsBtn = document.getElementById('resetCoordsBtn');
-    const downloadStlBtn = document.getElementById('downloadStlBtn');
-    const coordXSlider = document.getElementById('coordXSlider');
-    const coordYSlider = document.getElementById('coordYSlider');
-    const coordZSlider = document.getElementById('coordZSlider');
-    const coordXInput = document.getElementById('coordXInput');
-    const coordYInput = document.getElementById('coordYInput');
-    const coordZInput = document.getElementById('coordZInput');
-    const coordXLabel = document.getElementById('coordXLabel');
-    const coordYLabel = document.getElementById('coordYLabel');
-    const coordZLabel = document.getElementById('coordZLabel');
-    const status = document.getElementById('status');
-    const hudScale = document.getElementById('hudScale');
-    const hudColor = document.getElementById('hudColor');
-    const hudMode = document.getElementById('hudMode');
-
-    let autoSpin = true;
-    let wireframe = false;
-    let materialMode = 'Tron';
-    let currentMesh = null;
-    let currentBaseScale = 1;
-    let currentDisplayBaseY = 0;
-    let rawGeometryForExport = null;
-    let currentLoadedFileName = 'AVION.stl';
-
-    const coordinateOffsets = {
-      x: 0,
-      y: 0,
-      z: 0
-    };
-
     const AIRCRAFT_ORIENTATION_MATRIX = new THREE.Matrix4().set(
       0.9955579, -0.0000289, -0.0941515, 0,
      -0.0007069, -0.9999741, -0.0071677, 0,
@@ -598,14 +586,76 @@
       0,          0,          0,         1
     );
 
+    const $ = (id) => document.getElementById(id);
+
+    const fileInput = $('fileInput');
+    const fileName = $('fileName');
+    const statusEl = $('status');
+    const hudFile = $('hudFile');
+    const hudScale = $('hudScale');
+    const hudMode = $('hudMode');
+
+    const uniformScaleSlider = $('uniformScaleSlider');
+    const uniformScaleValue = $('uniformScaleValue');
+
+    const colorSlider = $('colorSlider');
+    const colorValue = $('colorValue');
+    const lightSlider = $('lightSlider');
+    const lightValue = $('lightValue');
+    const metalSlider = $('metalSlider');
+    const metalValue = $('metalValue');
+
+    const resetViewBtn = $('resetViewBtn');
+    const spinBtn = $('spinBtn');
+    const wireBtn = $('wireBtn');
+    const axesBtn = $('axesBtn');
+    const axesViewport = $('axesViewport');
+    const resetTransformsBtn = $('resetTransformsBtn');
+    const downloadStlBtn = $('downloadStlBtn');
+
+    const matDefaultBtn = $('matDefaultBtn');
+    const matMatteBtn = $('matMatteBtn');
+    const matChromeBtn = $('matChromeBtn');
+
+    const controlsMap = {
+      posX: { slider: $('posXSlider'), input: $('posXInput'), label: $('posXLabel'), min: -500, max: 500, def: 0, decimals: 2 },
+      posY: { slider: $('posYSlider'), input: $('posYInput'), label: $('posYLabel'), min: -500, max: 500, def: 0, decimals: 2 },
+      posZ: { slider: $('posZSlider'), input: $('posZInput'), label: $('posZLabel'), min: -500, max: 500, def: 0, decimals: 2 },
+
+      rotX: { slider: $('rotXSlider'), input: $('rotXInput'), label: $('rotXLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
+      rotY: { slider: $('rotYSlider'), input: $('rotYInput'), label: $('rotYLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
+      rotZ: { slider: $('rotZSlider'), input: $('rotZInput'), label: $('rotZLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
+
+      scaleX: { slider: $('scaleXSlider'), input: $('scaleXInput'), label: $('scaleXLabel'), min: 0.1, max: 5, def: 1, decimals: 2 },
+      scaleY: { slider: $('scaleYSlider'), input: $('scaleYInput'), label: $('scaleYLabel'), min: 0.1, max: 5, def: 1, decimals: 2 },
+      scaleZ: { slider: $('scaleZSlider'), input: $('scaleZInput'), label: $('scaleZLabel'), min: 0.1, max: 5, def: 1, decimals: 2 }
+    };
+
+    const transformState = {
+      posX: 0, posY: 0, posZ: 0,
+      rotX: 0, rotY: 0, rotZ: 0,
+      scaleX: 1, scaleY: 1, scaleZ: 1,
+      uniformScale: 1
+    };
+
+    let autoSpin = true;
+    let wireframe = false;
+    let materialMode = 'Tron';
+    let currentMesh = null;
+    let rawGeometryForExport = null;
+    let currentLoadedFileName = 'AVION.stl';
+    let baseFitScale = 1;
+    let showAxesWidget = true;
+
+    const canvas = $('scene');
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x040404);
-    scene.fog = new THREE.Fog(0x040404, 20, 180);
+    scene.background = new THREE.Color(0x060606);
+    scene.fog = new THREE.Fog(0x060606, 40, 260);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
-      alpha: false,
       powerPreference: 'high-performance'
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -613,102 +663,69 @@
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.01, 5000);
-    camera.position.set(0, 30, 120);
+    camera.position.set(0, 25, 130);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = true;
-    controls.minDistance = 0.5;
-    controls.maxDistance = 4000;
-    controls.target.set(0, 0, 0);
+    const orbit = new OrbitControls(camera, renderer.domElement);
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.05;
+    orbit.screenSpacePanning = true;
+    orbit.minDistance = 0.1;
+    orbit.maxDistance = 4000;
+    orbit.target.set(0, 0, 0);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, parseFloat(lightSlider.value));
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    const fillLight = new THREE.DirectionalLight(0xcfcfcf, 0.7);
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    keyLight.position.set(150, 220, 180);
-    fillLight.position.set(-160, 80, -120);
-    rimLight.position.set(0, 250, -200);
+    const fillLight = new THREE.DirectionalLight(0xdadada, 0.75);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.95);
+
+    keyLight.position.set(140, 180, 140);
+    fillLight.position.set(-120, 60, -120);
+    rimLight.position.set(0, 220, -180);
+
     scene.add(ambientLight, keyLight, fillLight, rimLight);
 
-    const grid = new THREE.GridHelper(800, 80, 0xffffff, 0x666666);
-    grid.material.opacity = 0.10;
+    const grid = new THREE.GridHelper(1200, 120, 0xffffff, 0x666666);
+    grid.material.opacity = 0.12;
     grid.material.transparent = true;
     scene.add(grid);
 
-    const floorPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(2000, 2000),
-      new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.015,
-        side: THREE.DoubleSide
-      })
-    );
-    floorPlane.rotation.x = -Math.PI / 2;
-    scene.add(floorPlane);
+    const axesHelper = new THREE.AxesHelper(80);
+    scene.add(axesHelper);
 
     const loader = new STLLoader();
     const exporter = new STLExporter();
+    const clock = new THREE.Clock();
+
+    const axesScene = new THREE.Scene();
+    const axesCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+    axesCamera.position.set(0, 0, 6);
+
+    const axesRenderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
+    axesRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    axesRenderer.setSize(150, 150);
+    axesViewport.appendChild(axesRenderer.domElement);
+
+    const axesGroup = new THREE.Group();
+    axesScene.add(axesGroup);
+
+    const axesLight = new THREE.AmbientLight(0xffffff, 1.3);
+    axesScene.add(axesLight);
 
     function setStatus(message) {
-      status.textContent = message;
+      statusEl.textContent = message;
     }
 
-    function clampCoordinate(value) {
-      const numeric = Number(value);
-      if (!Number.isFinite(numeric)) return 0;
-      return Math.min(500, Math.max(-500, numeric));
+    function clamp(value, min, max, fallback = 0) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(max, Math.max(min, n));
     }
 
-    function updateCoordLabels() {
-      coordXLabel.textContent = coordinateOffsets.x.toFixed(2);
-      coordYLabel.textContent = coordinateOffsets.y.toFixed(2);
-      coordZLabel.textContent = coordinateOffsets.z.toFixed(2);
-    }
-
-    function syncCoordinateControls() {
-      coordXSlider.value = coordinateOffsets.x;
-      coordYSlider.value = coordinateOffsets.y;
-      coordZSlider.value = coordinateOffsets.z;
-      coordXInput.value = coordinateOffsets.x.toFixed(2);
-      coordYInput.value = coordinateOffsets.y.toFixed(2);
-      coordZInput.value = coordinateOffsets.z.toFixed(2);
-      updateCoordLabels();
-    }
-
-    function applyCoordinateOffsetsToMesh() {
-      if (!currentMesh) return;
-
-      currentMesh.position.set(
-        coordinateOffsets.x,
-        currentDisplayBaseY + coordinateOffsets.y,
-        coordinateOffsets.z
-      );
-
-      const finalBox = new THREE.Box3().setFromObject(currentMesh);
-      grid.position.y = finalBox.min.y;
-      floorPlane.position.y = finalBox.min.y - 0.2;
-    }
-
-    function setCoordinate(axis, value) {
-      coordinateOffsets[axis] = clampCoordinate(value);
-      syncCoordinateControls();
-      applyCoordinateOffsetsToMesh();
-    }
-
-    function resetCoordinates() {
-      coordinateOffsets.x = 0;
-      coordinateOffsets.y = 0;
-      coordinateOffsets.z = 0;
-      syncCoordinateControls();
-      applyCoordinateOffsetsToMesh();
-      setStatus('Coordenadas XYZ reiniciadas.');
-    }
-
-    function setActiveButton(group, activeButton) {
-      group.forEach(btn => btn.classList.toggle('active', btn === activeButton));
+    function degToRad(deg) {
+      return THREE.MathUtils.degToRad(deg);
     }
 
     function hueToLabel(hue) {
@@ -727,23 +744,16 @@
       const isNeutral = hue === 0;
       const label = isNeutral ? 'Neutro' : hueToLabel(hue);
       const color = isNeutral
-        ? new THREE.Color(0xd8d8d8)
+        ? new THREE.Color(0xd9d9d9)
         : new THREE.Color().setHSL(hue / 360, 0.18, 0.78);
 
       colorValue.textContent = label;
-      hudColor.textContent = label;
       return { color, label };
-    }
-
-    function updateHudScale(value) {
-      const text = `${value.toFixed(2)}x`;
-      scaleValue.textContent = text;
-      hudScale.textContent = text;
     }
 
     function buildMaterial() {
       return new THREE.MeshPhysicalMaterial({
-        color: 0xd8d8d8,
+        color: 0xd9d9d9,
         metalness: parseFloat(metalSlider.value),
         roughness: 0.32,
         clearcoat: 0.35,
@@ -767,25 +777,67 @@
         material.metalness = 0.05;
         material.roughness = 0.82;
         material.clearcoat = 0.08;
-        material.clearcoatRoughness = 0.8;
-        material.emissive.copy(color).multiplyScalar(0.04);
+        material.clearcoatRoughness = 0.80;
+        material.emissive.copy(color).multiplyScalar(0.03);
       } else if (materialMode === 'Chrome') {
         material.metalness = 0.95;
-        material.roughness = 0.18;
+        material.roughness = 0.16;
         material.clearcoat = 0.9;
         material.clearcoatRoughness = 0.08;
-        material.emissive.copy(color).multiplyScalar(0.03);
+        material.emissive.copy(color).multiplyScalar(0.02);
       } else {
         material.metalness = metalnessValue;
         material.roughness = 0.32;
         material.clearcoat = 0.35;
         material.clearcoatRoughness = 0.30;
-        material.emissive.copy(color).multiplyScalar(0.13);
+        material.emissive.copy(color).multiplyScalar(0.12);
       }
 
       material.needsUpdate = true;
       hudMode.textContent = materialMode;
       metalValue.textContent = metalnessValue.toFixed(2);
+    }
+
+    function setActiveButton(group, activeButton) {
+      group.forEach(btn => btn.classList.toggle('active', btn === activeButton));
+    }
+
+    function updateAllControlLabels() {
+      Object.entries(controlsMap).forEach(([key, cfg]) => {
+        const value = transformState[key];
+        const suffix = cfg.suffix || '';
+        cfg.label.textContent = `${Number(value).toFixed(cfg.decimals)}${suffix}`;
+        cfg.slider.value = value;
+        cfg.input.value = Number(value).toFixed(cfg.decimals);
+      });
+
+      uniformScaleValue.textContent = `${transformState.uniformScale.toFixed(2)}x`;
+      uniformScaleSlider.value = transformState.uniformScale;
+      hudScale.textContent = `${transformState.uniformScale.toFixed(2)}x`;
+    }
+
+    function applyTransformsToMesh() {
+      if (!currentMesh) return;
+
+      const sx = baseFitScale * transformState.uniformScale * transformState.scaleX;
+      const sy = baseFitScale * transformState.uniformScale * transformState.scaleY;
+      const sz = baseFitScale * transformState.uniformScale * transformState.scaleZ;
+
+      currentMesh.scale.set(sx, sy, sz);
+      currentMesh.rotation.set(
+        degToRad(transformState.rotX),
+        degToRad(transformState.rotY),
+        degToRad(transformState.rotZ)
+      );
+      currentMesh.position.set(
+        transformState.posX,
+        transformState.posY,
+        transformState.posZ
+      );
+
+      const box = new THREE.Box3().setFromObject(currentMesh);
+      grid.position.y = box.min.y;
+      axesHelper.position.set(0, box.min.y, 0);
     }
 
     function fitCameraToObject(object) {
@@ -808,8 +860,8 @@
         center.z + distance
       );
 
-      controls.target.copy(center);
-      controls.update();
+      orbit.target.copy(center);
+      orbit.update();
     }
 
     function clearCurrentMesh() {
@@ -820,73 +872,81 @@
       currentMesh = null;
     }
 
-    function applyAircraftOrientation(mesh) {
-      mesh.rotation.set(0, 0, 0);
-      mesh.setRotationFromMatrix(AIRCRAFT_ORIENTATION_MATRIX);
+    function resetTransforms(silent = false) {
+      transformState.posX = 0;
+      transformState.posY = 0;
+      transformState.posZ = 0;
+
+      transformState.rotX = 0;
+      transformState.rotY = 0;
+      transformState.rotZ = 0;
+
+      transformState.scaleX = 1;
+      transformState.scaleY = 1;
+      transformState.scaleZ = 1;
+      transformState.uniformScale = 1;
+
+      updateAllControlLabels();
+      applyTransformsToMesh();
+
+      if (!silent) setStatus('Transformaciones reiniciadas.');
     }
 
-    function normalizeAndPlaceMesh(mesh) {
-      mesh.geometry.computeBoundingBox();
-      mesh.geometry.computeBoundingSphere();
-      mesh.geometry.computeVertexNormals();
+    function setTransformValue(key, value) {
+      const cfg = controlsMap[key];
+      const safe = clamp(value, cfg.min, cfg.max, cfg.def);
+      transformState[key] = safe;
+      updateAllControlLabels();
+      applyTransformsToMesh();
+    }
 
-      const box = mesh.geometry.boundingBox.clone();
+    function setUniformScale(value) {
+      transformState.uniformScale = clamp(value, 0.2, 4, 1);
+      updateAllControlLabels();
+      applyTransformsToMesh();
+    }
+
+    function prepareGeometry(geometry) {
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
+      geometry.computeVertexNormals();
+
+      const box = geometry.boundingBox.clone();
       const center = box.getCenter(new THREE.Vector3());
 
-      mesh.geometry.translate(-center.x, -center.y, -center.z);
-      mesh.scale.setScalar(1);
-      mesh.position.set(0, 0, 0);
+      geometry.translate(-center.x, -center.y, -center.z);
+      geometry.applyMatrix4(AIRCRAFT_ORIENTATION_MATRIX);
+      geometry.computeBoundingBox();
+      geometry.computeBoundingSphere();
+      geometry.computeVertexNormals();
 
-      applyAircraftOrientation(mesh);
-
-      const tempBox = new THREE.Box3().setFromObject(mesh);
-      const tempSize = tempBox.getSize(new THREE.Vector3());
-      const maxDim = Math.max(tempSize.x, tempSize.y, tempSize.z) || 1;
-
-      currentBaseScale = 120 / maxDim;
-      mesh.scale.setScalar(currentBaseScale * parseFloat(scaleSlider.value));
-
-      mesh.position.set(0, 0, 0);
-      const placedBox = new THREE.Box3().setFromObject(mesh);
-      const placedSize = placedBox.getSize(new THREE.Vector3());
-
-      currentDisplayBaseY = -placedBox.min.y + placedSize.y * 0.02;
-      applyCoordinateOffsetsToMesh();
+      return geometry;
     }
 
-    function applyScaleOnly() {
-      if (!currentMesh) return;
-
-      const userScale = parseFloat(scaleSlider.value);
-
-      currentMesh.scale.setScalar(currentBaseScale * userScale);
-      currentMesh.position.set(0, 0, 0);
-
-      const box = new THREE.Box3().setFromObject(currentMesh);
+    function computeBaseFitScale(geometry) {
+      const box = geometry.boundingBox.clone();
       const size = box.getSize(new THREE.Vector3());
-
-      currentDisplayBaseY = -box.min.y + size.y * 0.02;
-      applyCoordinateOffsetsToMesh();
-
-      updateHudScale(userScale);
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      return 120 / maxDim;
     }
 
-    function buildMesh(geometry, displayName = 'modelo.stl') {
+    function buildMeshFromGeometry(geometry, displayName = 'modelo.stl') {
       clearCurrentMesh();
 
       rawGeometryForExport = geometry.clone();
       currentLoadedFileName = displayName;
 
-      const mesh = new THREE.Mesh(geometry, buildMaterial());
-      currentMesh = mesh;
-      scene.add(mesh);
+      currentMesh = new THREE.Mesh(geometry, buildMaterial());
+      scene.add(currentMesh);
 
       fileName.textContent = displayName;
+      hudFile.textContent = displayName;
 
-      normalizeAndPlaceMesh(mesh);
+      baseFitScale = computeBaseFitScale(geometry);
+      resetTransforms(true);
       applyMaterialStyle();
-      applyScaleOnly();
-      fitCameraToObject(mesh);
+      applyTransformsToMesh();
+      fitCameraToObject(currentMesh);
 
       setStatus(`Modelo cargado: ${displayName}`);
     }
@@ -904,7 +964,8 @@
           throw new Error('Geometría STL vacía o inválida.');
         }
 
-        buildMesh(geometry, displayName);
+        const prepared = prepareGeometry(geometry);
+        buildMeshFromGeometry(prepared, displayName);
       } catch (error) {
         console.error(error);
         setStatus('No se pudo leer o visualizar el STL.');
@@ -919,34 +980,46 @@
         return;
       }
 
-      fileName.textContent = file.name;
       setStatus('Cargando STL manual...');
-
       file.arrayBuffer()
         .then(buffer => loadGeometryFromArrayBuffer(buffer, file.name))
         .catch((error) => {
           console.error(error);
-          setStatus('No se pudo cargar el STL. Selecciona un archivo válido.');
+          setStatus('No se pudo cargar el STL.');
         });
     }
 
-    function buildAdjustedExportGeometry() {
+    function buildExportGeometry() {
       if (!rawGeometryForExport) return null;
 
-      const exportGeometry = rawGeometryForExport.clone();
-      exportGeometry.computeBoundingBox();
+      const g = rawGeometryForExport.clone();
 
-      const center = exportGeometry.boundingBox.getCenter(new THREE.Vector3());
-      exportGeometry.translate(-center.x, -center.y, -center.z);
-      exportGeometry.applyMatrix4(AIRCRAFT_ORIENTATION_MATRIX);
-      exportGeometry.translate(
-        coordinateOffsets.x,
-        coordinateOffsets.y,
-        coordinateOffsets.z
+      const scaleMatrix = new THREE.Matrix4().makeScale(
+        transformState.uniformScale * transformState.scaleX,
+        transformState.uniformScale * transformState.scaleY,
+        transformState.uniformScale * transformState.scaleZ
       );
-      exportGeometry.computeVertexNormals();
 
-      return exportGeometry;
+      const rotationEuler = new THREE.Euler(
+        degToRad(transformState.rotX),
+        degToRad(transformState.rotY),
+        degToRad(transformState.rotZ),
+        'XYZ'
+      );
+      const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(rotationEuler);
+
+      const translationMatrix = new THREE.Matrix4().makeTranslation(
+        transformState.posX,
+        transformState.posY,
+        transformState.posZ
+      );
+
+      g.applyMatrix4(scaleMatrix);
+      g.applyMatrix4(rotationMatrix);
+      g.applyMatrix4(translationMatrix);
+      g.computeVertexNormals();
+
+      return g;
     }
 
     function downloadAdjustedStl() {
@@ -956,7 +1029,7 @@
       }
 
       try {
-        const exportGeometry = buildAdjustedExportGeometry();
+        const exportGeometry = buildExportGeometry();
         const exportMesh = new THREE.Mesh(exportGeometry, new THREE.MeshBasicMaterial());
         const stlString = exporter.parse(exportMesh, { binary: false });
 
@@ -966,7 +1039,7 @@
         const link = document.createElement('a');
         const baseName = currentLoadedFileName.replace(/\.stl$/i, '') || 'modelo';
         link.href = url;
-        link.download = `${baseName}_XYZ_ajustado.stl`;
+        link.download = `${baseName}_transformado.stl`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -975,10 +1048,10 @@
         exportGeometry.dispose();
         exportMesh.material.dispose();
 
-        setStatus('STL ajustado descargado correctamente.');
+        setStatus('STL exportado correctamente.');
       } catch (error) {
         console.error(error);
-        setStatus('No se pudo exportar el STL ajustado.');
+        setStatus('No se pudo exportar el STL.');
       }
     }
 
@@ -989,62 +1062,118 @@
         setStatus(`Intentando cargar ${defaultFileName}...`);
         const response = await fetch(`./${defaultFileName}`, { cache: 'no-store' });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const buffer = await response.arrayBuffer();
         loadGeometryFromArrayBuffer(buffer, defaultFileName);
       } catch (error) {
         console.error('Autocarga falló:', error);
         fileName.textContent = 'Ninguno';
+        hudFile.textContent = 'Ninguno';
         setStatus('No se pudo cargar AVION.stl automáticamente. Puedes cargarlo manualmente.');
       }
     }
+
+    function createAxisLine(direction, length = 1.6) {
+      const points = [new THREE.Vector3(0, 0, 0), direction.clone().multiplyScalar(length)];
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+      return new THREE.Line(geometry, material);
+    }
+
+    function createTextSprite(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 72px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true
+      });
+
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(0.55, 0.55, 0.55);
+      return sprite;
+    }
+
+    const axisX = createAxisLine(new THREE.Vector3(1, 0, 0));
+    const axisY = createAxisLine(new THREE.Vector3(0, 1, 0));
+    const axisZ = createAxisLine(new THREE.Vector3(0, 0, 1));
+
+    const labelX = createTextSprite('X');
+    const labelY = createTextSprite('Y');
+    const labelZ = createTextSprite('Z');
+
+    labelX.position.set(2.0, 0, 0);
+    labelY.position.set(0, 2.0, 0);
+    labelZ.position.set(0, 0, 2.0);
+
+    axesGroup.add(axisX, axisY, axisZ, labelX, labelY, labelZ);
+
+    function renderAxesWidget() {
+      if (!showAxesWidget) return;
+
+      const rect = axesViewport.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        axesRenderer.setSize(rect.width, rect.height, false);
+        axesCamera.aspect = rect.width / rect.height;
+        axesCamera.updateProjectionMatrix();
+      }
+
+      axesGroup.quaternion.copy(camera.quaternion);
+
+      labelX.quaternion.copy(axesCamera.quaternion);
+      labelY.quaternion.copy(axesCamera.quaternion);
+      labelZ.quaternion.copy(axesCamera.quaternion);
+
+      axesRenderer.render(axesScene, axesCamera);
+    }
+
+    Object.entries(controlsMap).forEach(([key, cfg]) => {
+      cfg.slider.addEventListener('input', () => setTransformValue(key, cfg.slider.value));
+      cfg.input.addEventListener('input', () => setTransformValue(key, cfg.input.value));
+    });
+
+    uniformScaleSlider.addEventListener('input', () => {
+      setUniformScale(uniformScaleSlider.value);
+    });
 
     fileInput.addEventListener('change', (event) => {
       handleFile(event.target.files?.[0]);
     });
 
-    window.addEventListener('dragover', (event) => {
-      event.preventDefault();
-    });
-
+    window.addEventListener('dragover', (event) => event.preventDefault());
     window.addEventListener('drop', (event) => {
       event.preventDefault();
       handleFile(event.dataTransfer?.files?.[0]);
     });
 
-    scaleSlider.addEventListener('input', () => {
-      applyScaleOnly();
-    });
-
-    colorSlider.addEventListener('input', () => {
-      applyMaterialStyle();
-    });
+    colorSlider.addEventListener('input', applyMaterialStyle);
 
     lightSlider.addEventListener('input', () => {
       const intensity = parseFloat(lightSlider.value);
       ambientLight.intensity = intensity;
       lightValue.textContent = intensity.toFixed(2);
     });
-    lightValue.textContent = parseFloat(lightSlider.value).toFixed(2);
 
     metalSlider.addEventListener('input', () => {
+      metalValue.textContent = parseFloat(metalSlider.value).toFixed(2);
       applyMaterialStyle();
     });
-    metalValue.textContent = parseFloat(metalSlider.value).toFixed(2);
 
-    coordXSlider.addEventListener('input', () => setCoordinate('x', coordXSlider.value));
-    coordYSlider.addEventListener('input', () => setCoordinate('y', coordYSlider.value));
-    coordZSlider.addEventListener('input', () => setCoordinate('z', coordZSlider.value));
-
-    coordXInput.addEventListener('input', () => setCoordinate('x', coordXInput.value));
-    coordYInput.addEventListener('input', () => setCoordinate('y', coordYInput.value));
-    coordZInput.addEventListener('input', () => setCoordinate('z', coordZInput.value));
-
-    resetCoordsBtn.addEventListener('click', () => {
-      resetCoordinates();
+    resetTransformsBtn.addEventListener('click', () => {
+      resetTransforms();
     });
 
     downloadStlBtn.addEventListener('click', () => {
@@ -1068,6 +1197,13 @@
       wireBtn.classList.toggle('active', wireframe);
       applyMaterialStyle();
       setStatus(wireframe ? 'Wireframe activado.' : 'Wireframe desactivado.');
+    });
+
+    axesBtn.addEventListener('click', () => {
+      showAxesWidget = !showAxesWidget;
+      axesBtn.classList.toggle('active', showAxesWidget);
+      axesViewport.classList.toggle('hidden', !showAxesWidget);
+      setStatus(showAxesWidget ? 'Visor de ejes activado.' : 'Visor de ejes oculto.');
     });
 
     const materialButtons = [matDefaultBtn, matMatteBtn, matChromeBtn];
@@ -1098,9 +1234,12 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    });
 
-    const clock = new THREE.Clock();
+      const rect = axesViewport.getBoundingClientRect();
+      axesRenderer.setSize(rect.width || 150, rect.height || 150, false);
+      axesCamera.aspect = (rect.width || 150) / (rect.height || 150);
+      axesCamera.updateProjectionMatrix();
+    });
 
     function animate() {
       requestAnimationFrame(animate);
@@ -1108,16 +1247,18 @@
       const delta = clock.getDelta();
 
       if (currentMesh && autoSpin) {
-        currentMesh.rotation.z += delta * 0.33;
+        currentMesh.rotation.y += delta * 0.45;
       }
 
-      controls.update();
+      orbit.update();
       renderer.render(scene, camera);
+      renderAxesWidget();
     }
 
-    updateHudScale(parseFloat(scaleSlider.value));
+    updateAllControlLabels();
+    lightValue.textContent = parseFloat(lightSlider.value).toFixed(2);
+    metalValue.textContent = parseFloat(metalSlider.value).toFixed(2);
     getToneColor();
-    syncCoordinateControls();
     animate();
     tryAutoLoadDefaultModel();
   </script>
