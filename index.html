@@ -572,11 +572,11 @@
               </div>
 
               <div class="row">
-                <label for="detailPresetSelect">Detalle de pintura <span class="value" id="detailPresetLabel">Medio</span></label>
+                <label for="detailPresetSelect">Detalle de pintura <span class="value" id="detailPresetLabel">Muy fino</span></label>
                 <select id="detailPresetSelect">
                   <option value="fast">Rápido</option>
-                  <option value="medium" selected>Medio</option>
-                  <option value="fine">Fino</option>
+                  <option value="medium">Medio</option>
+                  <option value="fine" selected>Muy fino</option>
                 </select>
                 <div class="hint-inline">
                   Se aplica automáticamente al cargar el STL. Medio está balanceado para PC.
@@ -989,7 +989,7 @@
       brushSize: 1,
       color: { r: 255, g: 255, b: 255 },
       baseColor: { r: 1, g: 1, b: 1 },
-      detailPreset: 'medium'
+      detailPreset: 'fine'
     };
 
     const paintHistory = [];
@@ -1003,6 +1003,8 @@
     let currentLoadedFileName = 'AVION.stl';
     let baseFitScale = 1;
     let showAxesWidget = true;
+    let activeRefineJob = 0;
+    let basePreparedGeometry = null;
     let faceCenters = [];
     let isPaintingPointerDown = false;
     const raycaster = new THREE.Raycaster();
@@ -1206,7 +1208,7 @@
 
     function detailPresetText(value) {
       if (value === 'fast') return 'Rápido';
-      if (value === 'fine') return 'Fino';
+      if (value === 'fine') return 'Muy fino';
       return 'Medio';
     }
 
@@ -1554,24 +1556,48 @@
     }
 
     function refineGeometryForPainting(geometry, preset = 'medium') {
+      const bounds = geometry.boundingBox ? geometry.boundingBox.clone() : new THREE.Box3().setFromBufferAttribute(geometry.attributes.position);
+      const size = bounds.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
       const faceCount = geometry.attributes.position.count / 3;
-      const limits = {
-        fast: 120000,
-        medium: 220000,
-        fine: 420000
+      const presetConfig = {
+        fast:   { maxFaces: 260000, targetEdge: maxDim / 90,  maxIterations: 4 },
+        medium: { maxFaces: 700000, targetEdge: maxDim / 145, maxIterations: 5 },
+        fine:   { maxFaces: 1600000, targetEdge: maxDim / 220, maxIterations: 6 }
       };
-      const maxFaces = limits[preset] || limits.medium;
+      const cfg = presetConfig[preset] || presetConfig.medium;
       let refined = geometry;
       let currentFaces = faceCount;
       let iterations = 0;
 
-      while (currentFaces * 4 <= maxFaces && iterations < 3) {
+      const averageTriangleEdge = (g) => {
+        const pos = g.attributes.position;
+        let total = 0;
+        let tris = 0;
+        const a = new THREE.Vector3();
+        const b = new THREE.Vector3();
+        const c = new THREE.Vector3();
+        const step = Math.max(3, Math.floor((pos.count / 3) / 2000) * 3);
+        for (let i = 0; i < pos.count; i += step) {
+          const i0 = Math.min(i, pos.count - 3);
+          a.fromBufferAttribute(pos, i0);
+          b.fromBufferAttribute(pos, i0 + 1);
+          c.fromBufferAttribute(pos, i0 + 2);
+          total += a.distanceTo(b) + b.distanceTo(c) + c.distanceTo(a);
+          tris++;
+        }
+        return tris ? total / (tris * 3) : maxDim;
+      };
+
+      let avgEdge = averageTriangleEdge(refined);
+      while (iterations < cfg.maxIterations && currentFaces * 4 <= cfg.maxFaces && avgEdge > cfg.targetEdge) {
         refined = splitTrianglesOnce(refined);
         iterations++;
         currentFaces = refined.attributes.position.count / 3;
+        avgEdge *= 0.5;
       }
 
-      return { geometry: refined, iterations, faceCount: currentFaces };
+      return { geometry: refined, iterations, faceCount: currentFaces, avgEdge, targetEdge: cfg.targetEdge };
     }
 
     function downloadColorJson() {
@@ -1920,12 +1946,26 @@
           throw new Error('Geometría STL vacía o inválida.');
         }
 
-        setStatus(`Preparando malla de pintura (${detailPresetText(paintState.detailPreset).toLowerCase()})...`);
-        let prepared = prepareGeometry(geometry);
-        const refinement = refineGeometryForPainting(prepared, paintState.detailPreset);
-        prepared = refinement.geometry;
-        buildMeshFromGeometry(prepared, displayName);
-        setStatus(`Modelo cargado: ${displayName} | detalle ${detailPresetText(paintState.detailPreset)} | ${refinement.faceCount.toLocaleString()} caras.`);
+        const preparedBase = prepareGeometry(geometry);
+        basePreparedGeometry = preparedBase.clone();
+        const baseFaceCount = preparedBase.attributes.position.count / 3;
+        buildMeshFromGeometry(preparedBase.clone(), displayName);
+        setStatus(`Modelo base cargado: ${displayName} | ${baseFaceCount.toLocaleString()} caras. Refinando a mini triángulos...`);
+
+        const jobId = ++activeRefineJob;
+        window.setTimeout(() => {
+          try {
+            if (jobId !== activeRefineJob || !basePreparedGeometry) return;
+            setStatus(`Refinando malla a mini triángulos (${detailPresetText(paintState.detailPreset).toLowerCase()})...`);
+            const refinement = refineGeometryForPainting(basePreparedGeometry.clone(), paintState.detailPreset);
+            if (jobId !== activeRefineJob) return;
+            buildMeshFromGeometry(refinement.geometry, displayName);
+            setStatus(`Modelo refinado listo: ${displayName} | ${detailPresetText(paintState.detailPreset)} | ${refinement.faceCount.toLocaleString()} caras.`);
+          } catch (refineError) {
+            console.error(refineError);
+            setStatus('El STL base cargó, pero la refinación fina no se pudo completar.');
+          }
+        }, 60);
       } catch (error) {
         console.error(error);
         setStatus('No se pudo leer o visualizar el STL.');
@@ -1940,7 +1980,7 @@
         return;
       }
 
-      setStatus('Cargando STL manual...');
+      setStatus('Cargando STL manual y preparando malla refinada...');
       file.arrayBuffer()
         .then(buffer => loadGeometryFromArrayBuffer(buffer, file.name))
         .catch((error) => {
@@ -2227,7 +2267,7 @@
         brushPreviewGroup.visible = false;
       }
       updatePaintControls();
-      setStatus(paintState.enabled ? 'Pincel activado.' : 'Pincel desactivado.');
+      setStatus(paintState.enabled ? 'Pincel activado. Si la malla refinada ya terminó, ahora pintarás sobre mini triángulos.' : 'Pincel desactivado.');
     });
 
     brushSizeSlider.addEventListener('input', () => {
