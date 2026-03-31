@@ -568,7 +568,19 @@
 
             <div id="paintCollapseContent" class="collapse-content">
               <div class="hint-inline">
-                Activa el pincel para pintar por triángulos directamente sobre el modelo. Incluye borrar, pintar áreas más grandes y deshacer/rehacer.
+                Activa el pincel para pintar por triángulos directamente sobre el modelo. Incluye borrar, pintar áreas más grandes, deshacer/rehacer, previsualización de brocha y refinado automático de malla para más precisión.
+              </div>
+
+              <div class="row">
+                <label for="detailPresetSelect">Detalle de pintura <span class="value" id="detailPresetLabel">Medio</span></label>
+                <select id="detailPresetSelect">
+                  <option value="fast">Rápido</option>
+                  <option value="medium" selected>Medio</option>
+                  <option value="fine">Fino</option>
+                </select>
+                <div class="hint-inline">
+                  Se aplica automáticamente al cargar el STL. Medio está balanceado para PC.
+                </div>
               </div>
 
               <div class="button-row-3">
@@ -900,6 +912,8 @@
     const planeCollapseContent = $('planeCollapseContent');
     const paintCollapseBtn = $('paintCollapseBtn');
     const paintCollapseContent = $('paintCollapseContent');
+    const detailPresetSelect = $('detailPresetSelect');
+    const detailPresetLabel = $('detailPresetLabel');
     const paintToolBtn = $('paintToolBtn');
     const eraseToolBtn = $('eraseToolBtn');
     const togglePaintBtn = $('togglePaintBtn');
@@ -974,11 +988,13 @@
       tool: 'paint',
       brushSize: 1,
       color: { r: 255, g: 255, b: 255 },
-      baseColor: { r: 1, g: 1, b: 1 }
+      baseColor: { r: 1, g: 1, b: 1 },
+      detailPreset: 'medium'
     };
 
     const paintHistory = [];
     const redoHistory = [];
+    let currentStrokeAction = null;
     let autoSpin = true;
     let wireframe = false;
     let materialMode = 'Tron';
@@ -996,6 +1012,9 @@
     const tempVecC = new THREE.Vector3();
     const tempVecCenter = new THREE.Vector3();
     const localHitPoint = new THREE.Vector3();
+    const tempNormal = new THREE.Vector3();
+    const tempQuaternion = new THREE.Quaternion();
+    const normalMatrix = new THREE.Matrix3();
 
     const canvas = $('scene');
 
@@ -1056,6 +1075,33 @@
 
     const axesHelper = new THREE.AxesHelper(120);
     scene.add(axesHelper);
+
+    const brushPreviewGroup = new THREE.Group();
+    brushPreviewGroup.visible = false;
+
+    const brushPreviewSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 18, 18),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.10,
+        depthWrite: false
+      })
+    );
+
+    const brushPreviewRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.86, 1, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.70,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      })
+    );
+
+    brushPreviewGroup.add(brushPreviewSphere, brushPreviewRing);
+    scene.add(brushPreviewGroup);
 
     const loader = new STLLoader();
     const exporter = new STLExporter();
@@ -1158,6 +1204,12 @@
       });
     }
 
+    function detailPresetText(value) {
+      if (value === 'fast') return 'Rápido';
+      if (value === 'fine') return 'Fino';
+      return 'Medio';
+    }
+
     function updatePaintControls() {
       const { r, g, b } = paintState.color;
       const hex = rgbToHex(r, g, b);
@@ -1177,6 +1229,15 @@
       eraseToolBtn.classList.toggle('active', paintState.tool === 'erase');
       togglePaintBtn.classList.toggle('active', paintState.enabled);
       canvas.classList.toggle('painting', paintState.enabled);
+      detailPresetSelect.value = paintState.detailPreset;
+      detailPresetLabel.textContent = detailPresetText(paintState.detailPreset);
+
+      const previewColor = paintState.tool === 'paint'
+        ? new THREE.Color(r / 255, g / 255, b / 255)
+        : new THREE.Color(1, 0.35, 0.35);
+
+      brushPreviewSphere.material.color.copy(previewColor);
+      brushPreviewRing.material.color.copy(previewColor);
     }
 
     function setPaintColor(r, g, b) {
@@ -1203,6 +1264,61 @@
       return geometry;
     }
 
+    function cloneVertexColor(attr, vertexIndex) {
+      const i = vertexIndex * 3;
+      return [attr.array[i], attr.array[i + 1], attr.array[i + 2]];
+    }
+
+    function assignVertexColor(attr, vertexIndex, rgbArray) {
+      const i = vertexIndex * 3;
+      attr.array[i] = rgbArray[0];
+      attr.array[i + 1] = rgbArray[1];
+      attr.array[i + 2] = rgbArray[2];
+    }
+
+    function createDeltaAction() {
+      return { indices: [], before: [], after: [], map: new Map() };
+    }
+
+    function rememberVertexBefore(action, attr, vertexIndex) {
+      if (action.map.has(vertexIndex)) return;
+      action.map.set(vertexIndex, action.indices.length);
+      action.indices.push(vertexIndex);
+      action.before.push(...cloneVertexColor(attr, vertexIndex));
+    }
+
+    function finalizeDeltaAction(action, attr) {
+      if (!action || action.indices.length === 0) return null;
+      action.after.length = 0;
+      for (const vertexIndex of action.indices) {
+        action.after.push(...cloneVertexColor(attr, vertexIndex));
+      }
+      return {
+        indices: Uint32Array.from(action.indices),
+        before: Float32Array.from(action.before),
+        after: Float32Array.from(action.after)
+      };
+    }
+
+    function applyDeltaAction(action, useAfter) {
+      if (!currentMesh || !action) return;
+      const attr = currentMesh.geometry.attributes.color;
+      const src = useAfter ? action.after : action.before;
+      for (let i = 0; i < action.indices.length; i++) {
+        const vertexIndex = action.indices[i];
+        const srcBase = i * 3;
+        assignVertexColor(attr, vertexIndex, [src[srcBase], src[srcBase + 1], src[srcBase + 2]]);
+      }
+      attr.needsUpdate = true;
+    }
+
+    function pushCompletedAction(action) {
+      if (!action || action.indices.length === 0) return;
+      paintHistory.push(action);
+      if (paintHistory.length > 20) paintHistory.shift();
+      redoHistory.length = 0;
+    }
+
     function rebuildFaceCenters() {
       faceCenters = [];
       if (!currentMesh) return;
@@ -1216,34 +1332,14 @@
       }
     }
 
-    function snapshotColors() {
-      if (!currentMesh) return null;
-      const arr = currentMesh.geometry.attributes.color.array;
-      return new Float32Array(arr);
-    }
-
-    function applyColorSnapshot(snapshot) {
-      if (!currentMesh || !snapshot) return;
-      currentMesh.geometry.attributes.color.array.set(snapshot);
-      currentMesh.geometry.attributes.color.needsUpdate = true;
-    }
-
-    function pushUndoState() {
-      const snap = snapshotColors();
-      if (!snap) return;
-      paintHistory.push(snap);
-      if (paintHistory.length > 50) paintHistory.shift();
-      redoHistory.length = 0;
-    }
-
     function undoPaint() {
       if (!currentMesh || paintHistory.length === 0) {
         setStatus('No hay cambios para deshacer.');
         return;
       }
-      redoHistory.push(snapshotColors());
-      const prev = paintHistory.pop();
-      applyColorSnapshot(prev);
+      const action = paintHistory.pop();
+      applyDeltaAction(action, false);
+      redoHistory.push(action);
       setStatus('Último trazo deshecho.');
     }
 
@@ -1252,17 +1348,37 @@
         setStatus('No hay cambios para rehacer.');
         return;
       }
-      paintHistory.push(snapshotColors());
-      const next = redoHistory.pop();
-      applyColorSnapshot(next);
+      const action = redoHistory.pop();
+      applyDeltaAction(action, true);
+      paintHistory.push(action);
       setStatus('Trazo rehecho.');
     }
 
-    function paintFacesAround(faceIndex, hitPointLocal) {
+    function getActiveBrushRadius() {
+      return Number(paintState.brushSize);
+    }
+
+    function getActivePaintColor() {
+      if (paintState.tool === 'erase') {
+        return [
+          paintState.baseColor.r,
+          paintState.baseColor.g,
+          paintState.baseColor.b
+        ];
+      }
+      return [
+        paintState.color.r / 255,
+        paintState.color.g / 255,
+        paintState.color.b / 255
+      ];
+    }
+
+    function paintFacesAround(faceIndex, hitPointLocal, action = null) {
       if (!currentMesh) return 0;
       const colorAttr = currentMesh.geometry.attributes.color;
-      const radius = Number(paintState.brushSize);
+      const radius = getActiveBrushRadius();
       const radiusSq = radius * radius;
+      const targetColor = getActivePaintColor();
       let changed = 0;
 
       for (let f = 0; f < faceCenters.length; f++) {
@@ -1270,22 +1386,25 @@
         if (center.distanceToSquared(hitPointLocal) <= radiusSq) {
           const baseVertex = f * 3;
           for (let v = 0; v < 3; v++) {
-            const i = (baseVertex + v) * 3;
-            if (paintState.tool === 'erase') {
-              colorAttr.array[i] = paintState.baseColor.r;
-              colorAttr.array[i + 1] = paintState.baseColor.g;
-              colorAttr.array[i + 2] = paintState.baseColor.b;
-            } else {
-              colorAttr.array[i] = paintState.color.r / 255;
-              colorAttr.array[i + 1] = paintState.color.g / 255;
-              colorAttr.array[i + 2] = paintState.color.b / 255;
+            const vertexIndex = baseVertex + v;
+            const i = vertexIndex * 3;
+            const sameColor =
+              Math.abs(colorAttr.array[i] - targetColor[0]) < 1e-6 &&
+              Math.abs(colorAttr.array[i + 1] - targetColor[1]) < 1e-6 &&
+              Math.abs(colorAttr.array[i + 2] - targetColor[2]) < 1e-6;
+
+            if (!sameColor) {
+              if (action) rememberVertexBefore(action, colorAttr, vertexIndex);
+              colorAttr.array[i] = targetColor[0];
+              colorAttr.array[i + 1] = targetColor[1];
+              colorAttr.array[i + 2] = targetColor[2];
+              changed++;
             }
           }
-          changed++;
         }
       }
 
-      colorAttr.needsUpdate = true;
+      if (changed > 0) colorAttr.needsUpdate = true;
       return changed;
     }
 
@@ -1299,15 +1418,60 @@
       if (!hits.length) return null;
       const hit = hits[0];
       currentMesh.worldToLocal(localHitPoint.copy(hit.point));
-      return { hit, localPoint: localHitPoint.clone() };
+
+      tempNormal.copy(hit.face.normal);
+      normalMatrix.getNormalMatrix(currentMesh.matrixWorld);
+      tempNormal.applyMatrix3(normalMatrix).normalize();
+
+      return {
+        hit,
+        localPoint: localHitPoint.clone(),
+        worldPoint: hit.point.clone(),
+        worldNormal: tempNormal.clone()
+      };
+    }
+
+    function updateBrushPreview(event) {
+      if (!paintState.enabled || !currentMesh) {
+        brushPreviewGroup.visible = false;
+        return;
+      }
+      const hitData = getLocalPointerHit(event);
+      if (!hitData) {
+        brushPreviewGroup.visible = false;
+        return;
+      }
+
+      const avgScale = (currentMesh.scale.x + currentMesh.scale.y + currentMesh.scale.z) / 3;
+      const radius = Math.max(0.001, getActiveBrushRadius() * avgScale);
+
+      brushPreviewGroup.visible = true;
+      brushPreviewGroup.position.copy(hitData.worldPoint);
+      brushPreviewSphere.scale.setScalar(radius);
+      brushPreviewRing.scale.setScalar(radius * 1.06);
+      tempQuaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), hitData.worldNormal);
+      brushPreviewRing.quaternion.copy(tempQuaternion);
+      brushPreviewSphere.material.opacity = paintState.tool === 'paint' ? 0.12 : 0.08;
+    }
+
+    function beginPaintStroke() {
+      currentStrokeAction = createDeltaAction();
+    }
+
+    function finishPaintStroke() {
+      if (!currentMesh || !currentStrokeAction) return;
+      const finalized = finalizeDeltaAction(currentStrokeAction, currentMesh.geometry.attributes.color);
+      currentStrokeAction = null;
+      if (finalized) pushCompletedAction(finalized);
     }
 
     function handlePaintStroke(event, beginStroke = false) {
       if (!paintState.enabled || !currentMesh) return;
       const hitData = getLocalPointerHit(event);
       if (!hitData) return;
-      if (beginStroke) pushUndoState();
-      const changed = paintFacesAround(hitData.hit.faceIndex, hitData.localPoint);
+      updateBrushPreview(event);
+      if (beginStroke) beginPaintStroke();
+      const changed = paintFacesAround(hitData.hit.faceIndex, hitData.localPoint, currentStrokeAction);
       if (changed > 0) {
         setStatus(paintState.tool === 'paint' ? 'Pintando modelo...' : 'Borrando pintura...');
       }
@@ -1318,18 +1482,96 @@
         setStatus('Primero carga un STL.');
         return;
       }
-      pushUndoState();
       const colorAttr = currentMesh.geometry.attributes.color;
-      const r = useErase ? paintState.baseColor.r : paintState.color.r / 255;
-      const g = useErase ? paintState.baseColor.g : paintState.color.g / 255;
-      const b = useErase ? paintState.baseColor.b : paintState.color.b / 255;
-      for (let i = 0; i < colorAttr.count; i++) {
-        colorAttr.array[i * 3] = r;
-        colorAttr.array[i * 3 + 1] = g;
-        colorAttr.array[i * 3 + 2] = b;
+      const action = createDeltaAction();
+      const target = useErase
+        ? [paintState.baseColor.r, paintState.baseColor.g, paintState.baseColor.b]
+        : [paintState.color.r / 255, paintState.color.g / 255, paintState.color.b / 255];
+
+      for (let vertexIndex = 0; vertexIndex < colorAttr.count; vertexIndex++) {
+        const i = vertexIndex * 3;
+        const sameColor =
+          Math.abs(colorAttr.array[i] - target[0]) < 1e-6 &&
+          Math.abs(colorAttr.array[i + 1] - target[1]) < 1e-6 &&
+          Math.abs(colorAttr.array[i + 2] - target[2]) < 1e-6;
+        if (!sameColor) {
+          rememberVertexBefore(action, colorAttr, vertexIndex);
+          colorAttr.array[i] = target[0];
+          colorAttr.array[i + 1] = target[1];
+          colorAttr.array[i + 2] = target[2];
+        }
       }
+
       colorAttr.needsUpdate = true;
+      const finalized = finalizeDeltaAction(action, colorAttr);
+      if (finalized) pushCompletedAction(finalized);
       setStatus(useErase ? 'Pintura eliminada del modelo.' : 'Todo el modelo fue pintado.');
+    }
+
+    function splitTrianglesOnce(geometry) {
+      const src = ensureColorAttribute(geometry).toNonIndexed();
+      const pos = src.attributes.position;
+      const color = src.attributes.color;
+
+      const newPositions = [];
+      const newColors = [];
+
+      const pushVertex = (vec, col) => {
+        newPositions.push(vec.x, vec.y, vec.z);
+        newColors.push(col[0], col[1], col[2]);
+      };
+
+      for (let i = 0; i < pos.count; i += 3) {
+        const a = new THREE.Vector3().fromBufferAttribute(pos, i);
+        const b = new THREE.Vector3().fromBufferAttribute(pos, i + 1);
+        const c = new THREE.Vector3().fromBufferAttribute(pos, i + 2);
+
+        const ca = cloneVertexColor(color, i);
+        const cb = cloneVertexColor(color, i + 1);
+        const cc = cloneVertexColor(color, i + 2);
+
+        const ab = a.clone().add(b).multiplyScalar(0.5);
+        const bc = b.clone().add(c).multiplyScalar(0.5);
+        const caMid = c.clone().add(a).multiplyScalar(0.5);
+
+        const cab = [(ca[0] + cb[0]) * 0.5, (ca[1] + cb[1]) * 0.5, (ca[2] + cb[2]) * 0.5];
+        const cbc = [(cb[0] + cc[0]) * 0.5, (cb[1] + cc[1]) * 0.5, (cb[2] + cc[2]) * 0.5];
+        const cca = [(cc[0] + ca[0]) * 0.5, (cc[1] + ca[1]) * 0.5, (cc[2] + ca[2]) * 0.5];
+
+        pushVertex(a, ca);    pushVertex(ab, cab);  pushVertex(caMid, cca);
+        pushVertex(ab, cab);  pushVertex(b, cb);    pushVertex(bc, cbc);
+        pushVertex(caMid, cca); pushVertex(bc, cbc); pushVertex(c, cc);
+        pushVertex(ab, cab);  pushVertex(bc, cbc);  pushVertex(caMid, cca);
+      }
+
+      const out = new THREE.BufferGeometry();
+      out.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+      out.setAttribute('color', new THREE.Float32BufferAttribute(newColors, 3));
+      out.computeVertexNormals();
+      out.computeBoundingBox();
+      out.computeBoundingSphere();
+      return out;
+    }
+
+    function refineGeometryForPainting(geometry, preset = 'medium') {
+      const faceCount = geometry.attributes.position.count / 3;
+      const limits = {
+        fast: 120000,
+        medium: 220000,
+        fine: 420000
+      };
+      const maxFaces = limits[preset] || limits.medium;
+      let refined = geometry;
+      let currentFaces = faceCount;
+      let iterations = 0;
+
+      while (currentFaces * 4 <= maxFaces && iterations < 3) {
+        refined = splitTrianglesOnce(refined);
+        iterations++;
+        currentFaces = refined.attributes.position.count / 3;
+      }
+
+      return { geometry: refined, iterations, faceCount: currentFaces };
     }
 
     function downloadColorJson() {
@@ -1523,6 +1765,7 @@
       currentMesh.geometry.dispose();
       currentMesh.material.dispose();
       currentMesh = null;
+      brushPreviewGroup.visible = false;
     }
 
     function resetTransforms(silent = false) {
@@ -1654,13 +1897,14 @@
       baseFitScale = computeBaseFitScale(geometry);
       paintHistory.length = 0;
       redoHistory.length = 0;
+      currentStrokeAction = null;
       rebuildFaceCenters();
       resetTransforms(true);
       applyMaterialStyle();
       applyTransformsToMesh();
       fitCameraToObject(currentMesh);
+      updatePaintControls();
 
-      setStatus(`Modelo cargado: ${displayName}`);
     }
 
     function loadGeometryFromArrayBuffer(buffer, displayName = 'modelo.stl') {
@@ -1676,8 +1920,12 @@
           throw new Error('Geometría STL vacía o inválida.');
         }
 
-        const prepared = prepareGeometry(geometry);
+        setStatus(`Preparando malla de pintura (${detailPresetText(paintState.detailPreset).toLowerCase()})...`);
+        let prepared = prepareGeometry(geometry);
+        const refinement = refineGeometryForPainting(prepared, paintState.detailPreset);
+        prepared = refinement.geometry;
         buildMeshFromGeometry(prepared, displayName);
+        setStatus(`Modelo cargado: ${displayName} | detalle ${detailPresetText(paintState.detailPreset)} | ${refinement.faceCount.toLocaleString()} caras.`);
       } catch (error) {
         console.error(error);
         setStatus('No se pudo leer o visualizar el STL.');
@@ -1974,7 +2222,10 @@
 
     togglePaintBtn.addEventListener('click', () => {
       paintState.enabled = !paintState.enabled;
-      if (!paintState.enabled) isPaintingPointerDown = false;
+      if (!paintState.enabled) {
+        isPaintingPointerDown = false;
+        brushPreviewGroup.visible = false;
+      }
       updatePaintControls();
       setStatus(paintState.enabled ? 'Pincel activado.' : 'Pincel desactivado.');
     });
@@ -1982,6 +2233,12 @@
     brushSizeSlider.addEventListener('input', () => {
       paintState.brushSize = clamp(brushSizeSlider.value, 1, 120, 1);
       updatePaintControls();
+    });
+
+    detailPresetSelect.addEventListener('change', () => {
+      paintState.detailPreset = detailPresetSelect.value;
+      updatePaintControls();
+      setStatus(`Detalle de pintura configurado en ${detailPresetText(paintState.detailPreset)}. Se aplicará al siguiente STL cargado.`);
     });
 
     paintColorPicker.addEventListener('input', () => {
@@ -2010,11 +2267,17 @@
     });
 
     window.addEventListener('pointermove', (event) => {
-      if (!paintState.enabled || !isPaintingPointerDown || !currentMesh) return;
+      if (!paintState.enabled || !currentMesh) {
+        brushPreviewGroup.visible = false;
+        return;
+      }
+      updateBrushPreview(event);
+      if (!isPaintingPointerDown) return;
       handlePaintStroke(event, false);
     });
 
     window.addEventListener('pointerup', () => {
+      if (isPaintingPointerDown) finishPaintStroke();
       isPaintingPointerDown = false;
       orbit.enabled = !paintState.enabled;
     });
