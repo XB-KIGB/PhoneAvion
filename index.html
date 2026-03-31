@@ -7,18 +7,14 @@
 
   <style>
     :root {
-      --bg: #090909;
-      --bg-2: #121212;
-      --panel: rgba(20,20,20,0.86);
-      --panel-2: rgba(255,255,255,0.03);
-      --line: rgba(255,255,255,0.10);
-      --line-strong: rgba(255,255,255,0.20);
-      --text: #f5f5f5;
-      --muted: #bdbdbd;
-      --accent: #ffffff;
-      --shadow: 0 16px 40px rgba(0,0,0,0.35);
+      --bg: #050505;
+      --panel-2: rgba(255,255,255,0.04);
+      --line: rgba(255,255,255,0.12);
+      --line-strong: rgba(255,255,255,0.24);
+      --text: #f8f8f8;
+      --muted: #cccccc;
+      --shadow: 0 18px 46px rgba(0,0,0,0.38);
       --radius-xl: 22px;
-      --radius-lg: 16px;
       --radius-md: 12px;
     }
 
@@ -29,9 +25,9 @@
       width: 100%;
       height: 100%;
       background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 22%),
-        radial-gradient(circle at top right, rgba(255,255,255,0.035), transparent 20%),
-        linear-gradient(180deg, #111 0%, #050505 100%);
+        radial-gradient(circle at top left, rgba(255,255,255,0.06), transparent 22%),
+        radial-gradient(circle at top right, rgba(255,255,255,0.04), transparent 20%),
+        linear-gradient(180deg, #111 0%, #030303 100%);
       color: var(--text);
       font-family: Inter, Arial, Helvetica, sans-serif;
       overflow: hidden;
@@ -58,11 +54,11 @@
       position: absolute;
       left: 18px;
       bottom: 86px;
-      width: 150px;
-      height: 150px;
+      width: 155px;
+      height: 155px;
       border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: linear-gradient(180deg, rgba(18,18,18,0.78), rgba(10,10,10,0.88));
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(18,18,18,0.80), rgba(10,10,10,0.92));
       backdrop-filter: blur(10px);
       box-shadow: 0 10px 26px rgba(0,0,0,0.28);
       pointer-events: none;
@@ -82,7 +78,7 @@
 
     .glass {
       pointer-events: auto;
-      background: linear-gradient(180deg, rgba(18,18,18,0.84), rgba(10,10,10,0.92));
+      background: linear-gradient(180deg, rgba(18,18,18,0.84), rgba(10,10,10,0.93));
       border: 1px solid var(--line);
       backdrop-filter: blur(14px);
       box-shadow: var(--shadow);
@@ -99,7 +95,7 @@
     .title-card {
       top: 18px;
       left: 18px;
-      width: min(360px, calc(100vw - 36px));
+      width: min(365px, calc(100vw - 36px));
       padding: 18px 20px;
       z-index: 5;
     }
@@ -107,18 +103,27 @@
     .control-panel {
       top: 18px;
       right: 18px;
-      width: min(430px, calc(100vw - 36px));
+      width: min(470px, calc(100vw - 36px));
       height: calc(100vh - 96px);
       overflow: auto;
       padding: 16px;
       z-index: 5;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.24) transparent;
+    }
+
+    .control-panel::-webkit-scrollbar { width: 10px; }
+    .control-panel::-webkit-scrollbar-track { background: transparent; }
+    .control-panel::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
     }
 
     .status-bar {
       left: 18px;
       right: 18px;
       bottom: 18px;
-      min-height: 50px;
+      min-height: 52px;
       padding: 12px 16px;
       display: grid;
       grid-template-columns: 1fr auto auto auto;
@@ -131,7 +136,7 @@
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.26em;
-      color: #d8d8d8;
+      color: #dadada;
       margin-bottom: 8px;
     }
 
@@ -167,7 +172,7 @@
       font-size: 0.80rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: #efefef;
+      color: #f0f0f0;
     }
 
     .row {
@@ -192,16 +197,18 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .file-help {
+    .file-help,
+    .hint-inline {
       color: var(--muted);
       font-size: 0.82rem;
       line-height: 1.45;
     }
 
     input[type="file"],
-    input[type="number"] {
+    input[type="number"],
+    select {
       width: 100%;
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--line);
       color: var(--text);
       border-radius: var(--radius-md);
@@ -210,36 +217,37 @@
     }
 
     input[type="number"]:focus,
-    input[type="file"]:focus {
+    input[type="file"]:focus,
+    select:focus {
       border-color: var(--line-strong);
     }
 
     input[type="range"] {
       width: 100%;
       appearance: none;
-      height: 8px;
+      height: 9px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #1e1e1e, #ffffff, #1e1e1e);
+      background: linear-gradient(90deg, #1f1f1f, #ffffff, #1f1f1f);
       outline: none;
       border: none;
     }
 
     input[type="range"]::-webkit-slider-thumb {
       appearance: none;
-      width: 17px;
-      height: 17px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: #fff;
       border: 2px solid #111;
       cursor: pointer;
-      box-shadow: 0 0 16px rgba(255,255,255,0.28);
+      box-shadow: 0 0 18px rgba(255,255,255,0.32);
     }
 
     button {
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
       padding: 11px 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
       color: var(--text);
       font-weight: 600;
       cursor: pointer;
@@ -249,11 +257,11 @@
     button:hover {
       transform: translateY(-1px);
       border-color: var(--line-strong);
-      box-shadow: 0 0 16px rgba(255,255,255,0.08);
+      box-shadow: 0 0 16px rgba(255,255,255,0.10);
     }
 
     button.active {
-      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+      background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.06));
       border-color: rgba(255,255,255,0.28);
     }
 
@@ -272,10 +280,10 @@
     }
 
     .axis-row {
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 14px;
       padding: 10px;
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.025);
       display: grid;
       gap: 8px;
     }
@@ -292,7 +300,7 @@
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.16em;
-      color: #dcdcdc;
+      color: #e0e0e0;
     }
 
     .divider {
@@ -302,7 +310,7 @@
     }
 
     .status-text {
-      color: #ededed;
+      color: #f0f0f0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -321,7 +329,7 @@
       height: 120px;
       transform: translate(-50%, -50%);
       pointer-events: none;
-      opacity: 0.25;
+      opacity: 0.24;
     }
 
     .crosshair::before,
@@ -355,18 +363,100 @@
     .crosshair span::before { left: 0; }
     .crosshair span::after { right: 0; }
 
+    .collapsible {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .collapse-header {
+      width: 100%;
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 14px 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-radius: 0;
+      box-shadow: none;
+      transform: none !important;
+    }
+
+    .collapse-header:hover {
+      background: rgba(255,255,255,0.03);
+      box-shadow: none;
+    }
+
+    .collapse-title {
+      font-size: 0.80rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #f0f0f0;
+      text-align: left;
+    }
+
+    .collapse-arrow {
+      font-size: 1rem;
+      color: #e8e8e8;
+      transition: transform 0.2s ease;
+      transform: rotate(0deg);
+      line-height: 1;
+    }
+
+    .collapse-header.collapsed .collapse-arrow {
+      transform: rotate(-90deg);
+    }
+
+    .collapse-content {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .collapse-content.hidden {
+      display: none;
+    }
+
+
+    #scene.painting {
+      cursor: crosshair;
+    }
+
+    .paint-preview {
+      width: 100%;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 42px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.05);
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    .rgb-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
     @media (max-width: 980px) {
       html, body { overflow: auto; }
       #app { min-height: 100vh; }
       #scene { position: fixed; }
-
       .hud {
         display: grid;
         gap: 12px;
         padding: 12px;
         align-content: start;
       }
-
       .title-card,
       .control-panel,
       .status-bar {
@@ -374,11 +464,10 @@
         width: 100%;
         height: auto;
       }
-
       .status-bar { grid-template-columns: 1fr; }
       .axis-inputs { grid-template-columns: 1fr; }
+      .rgb-grid { grid-template-columns: 1fr; }
       .crosshair { display: none; }
-
       #axesViewport {
         width: 110px;
         height: 110px;
@@ -407,8 +496,8 @@
         <div class="eyebrow">3D STL Editor</div>
         <h1 class="title">Aircraft Viewer Pro</h1>
         <p class="subtitle">
-          Ajusta el modelo en 9 ejes: posición, rotación y escala en X, Y y Z.
-          También puedes visualizar los ejes XYZ y exportar el STL transformado.
+          El plano inicia en estándar de diseño: XZ horizontal y Y vertical.
+          También puedes cambiar la orientación base del plano al final de su sección.
         </p>
       </section>
 
@@ -427,12 +516,17 @@
 
             <div class="button-row-2">
               <button id="resetViewBtn" type="button">Recentrar</button>
-              <button id="spinBtn" type="button" class="active">Auto giro</button>
+              <button id="fitScaleViewBtn" type="button">Ajustar cámara</button>
             </div>
 
             <div class="button-row-2" style="margin-top:10px;">
+              <button id="spinBtn" type="button" class="active">Auto giro</button>
               <button id="wireBtn" type="button">Wireframe</button>
+            </div>
+
+            <div class="button-row-2" style="margin-top:10px;">
               <button id="axesBtn" type="button" class="active">Ejes XYZ</button>
+              <button id="snapPlaneBtn" type="button">Plano al modelo</button>
             </div>
           </div>
 
@@ -441,17 +535,17 @@
 
             <div class="row">
               <label for="uniformScaleSlider">Escala general <span class="value" id="uniformScaleValue">1.00x</span></label>
-              <input id="uniformScaleSlider" type="range" min="0.2" max="4" step="0.01" value="1" />
+              <input id="uniformScaleSlider" type="range" min="0.1" max="8" step="0.01" value="1" />
             </div>
 
             <div class="row">
-              <label for="colorSlider">Color <span class="value" id="colorValue">Neutro</span></label>
+              <label for="colorSlider">Color <span class="value" id="colorValue">Blanco</span></label>
               <input id="colorSlider" type="range" min="0" max="360" step="1" value="0" />
             </div>
 
             <div class="row">
-              <label for="lightSlider">Brillo <span class="value" id="lightValue">1.20</span></label>
-              <input id="lightSlider" type="range" min="0.4" max="3" step="0.01" value="1.2" />
+              <label for="lightSlider">Brillo <span class="value" id="lightValue">1.50</span></label>
+              <input id="lightSlider" type="range" min="0.4" max="5" step="0.01" value="1.5" />
             </div>
 
             <div class="row">
@@ -466,99 +560,280 @@
             </div>
           </div>
 
-          <div class="control-group">
-            <h2 class="group-title">Transformaciones</h2>
+          <div class="control-group collapsible">
+            <button id="paintCollapseBtn" class="collapse-header" type="button" aria-expanded="true">
+              <span class="collapse-title">Pintar</span>
+              <span class="collapse-arrow">▼</span>
+            </button>
 
-            <div class="subsection-title">Posición</div>
-            <div class="axis-grid">
-              <div class="axis-row">
-                <div class="mini-label">X <span class="value" id="posXLabel">0.00</span></div>
-                <div class="axis-inputs">
-                  <input id="posXSlider" type="range" min="-500" max="500" step="0.1" value="0" />
-                  <input id="posXInput" type="number" step="0.1" value="0" />
+            <div id="paintCollapseContent" class="collapse-content">
+              <div class="hint-inline">
+                Activa el pincel para pintar por triángulos directamente sobre el modelo. Incluye borrar, pintar áreas más grandes y deshacer/rehacer.
+              </div>
+
+              <div class="button-row-3">
+                <button id="paintToolBtn" type="button" class="active">Pintar</button>
+                <button id="eraseToolBtn" type="button">Borrar</button>
+                <button id="togglePaintBtn" type="button">Activar pincel</button>
+              </div>
+
+              <div class="button-row-2">
+                <button id="undoPaintBtn" type="button">Deshacer</button>
+                <button id="redoPaintBtn" type="button">Rehacer</button>
+              </div>
+
+              <div class="row">
+                <label for="brushSizeSlider">Tamaño brocha <span class="value" id="brushSizeValue">1</span></label>
+                <input id="brushSizeSlider" type="range" min="1" max="120" step="1" value="1" />
+              </div>
+
+              <div class="row">
+                <label for="paintColorPicker">Color <span class="value" id="paintHexValue">#ffffff</span></label>
+                <input id="paintColorPicker" type="color" value="#ffffff" />
+              </div>
+
+              <div class="row">
+                <div class="subsection-title">RGB</div>
+                <div class="rgb-grid">
+                  <div>
+                    <label for="paintR">R <span class="value" id="paintRValue">255</span></label>
+                    <input id="paintR" type="number" min="0" max="255" step="1" value="255" />
+                  </div>
+                  <div>
+                    <label for="paintG">G <span class="value" id="paintGValue">255</span></label>
+                    <input id="paintG" type="number" min="0" max="255" step="1" value="255" />
+                  </div>
+                  <div>
+                    <label for="paintB">B <span class="value" id="paintBValue">255</span></label>
+                    <input id="paintB" type="number" min="0" max="255" step="1" value="255" />
+                  </div>
                 </div>
               </div>
 
-              <div class="axis-row">
-                <div class="mini-label">Y <span class="value" id="posYLabel">0.00</span></div>
-                <div class="axis-inputs">
-                  <input id="posYSlider" type="range" min="-500" max="500" step="0.1" value="0" />
-                  <input id="posYInput" type="number" step="0.1" value="0" />
-                </div>
+              <div class="row">
+                <label>Vista previa <span class="value" id="paintToolLabel">Pintar</span></label>
+                <div id="paintPreview" class="paint-preview"></div>
               </div>
 
-              <div class="axis-row">
-                <div class="mini-label">Z <span class="value" id="posZLabel">0.00</span></div>
-                <div class="axis-inputs">
-                  <input id="posZSlider" type="range" min="-500" max="500" step="0.1" value="0" />
-                  <input id="posZInput" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-            <div class="subsection-title">Rotación (grados)</div>
-
-            <div class="axis-grid">
-              <div class="axis-row">
-                <div class="mini-label">Rot X <span class="value" id="rotXLabel">0.00°</span></div>
-                <div class="axis-inputs">
-                  <input id="rotXSlider" type="range" min="-180" max="180" step="0.1" value="0" />
-                  <input id="rotXInput" type="number" step="0.1" value="0" />
-                </div>
+              <div class="button-row-2">
+                <button id="fillPaintBtn" type="button">Pintar todo</button>
+                <button id="clearPaintBtn" type="button">Limpiar pintura</button>
               </div>
 
-              <div class="axis-row">
-                <div class="mini-label">Rot Y <span class="value" id="rotYLabel">0.00°</span></div>
-                <div class="axis-inputs">
-                  <input id="rotYSlider" type="range" min="-180" max="180" step="0.1" value="0" />
-                  <input id="rotYInput" type="number" step="0.1" value="0" />
-                </div>
+              <div class="button-row-2">
+                <button id="downloadGlbBtn" type="button">Descargar GLB color</button>
+                <button id="downloadColorJsonBtn" type="button">Guardar colores JSON</button>
               </div>
-
-              <div class="axis-row">
-                <div class="mini-label">Rot Z <span class="value" id="rotZLabel">0.00°</span></div>
-                <div class="axis-inputs">
-                  <input id="rotZSlider" type="range" min="-180" max="180" step="0.1" value="0" />
-                  <input id="rotZInput" type="number" step="0.1" value="0" />
-                </div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-            <div class="subsection-title">Escala por eje</div>
-
-            <div class="axis-grid">
-              <div class="axis-row">
-                <div class="mini-label">Scale X <span class="value" id="scaleXLabel">1.00</span></div>
-                <div class="axis-inputs">
-                  <input id="scaleXSlider" type="range" min="0.1" max="5" step="0.01" value="1" />
-                  <input id="scaleXInput" type="number" step="0.01" value="1" />
-                </div>
-              </div>
-
-              <div class="axis-row">
-                <div class="mini-label">Scale Y <span class="value" id="scaleYLabel">1.00</span></div>
-                <div class="axis-inputs">
-                  <input id="scaleYSlider" type="range" min="0.1" max="5" step="0.01" value="1" />
-                  <input id="scaleYInput" type="number" step="0.01" value="1" />
-                </div>
-              </div>
-
-              <div class="axis-row">
-                <div class="mini-label">Scale Z <span class="value" id="scaleZLabel">1.00</span></div>
-                <div class="axis-inputs">
-                  <input id="scaleZSlider" type="range" min="0.1" max="5" step="0.01" value="1" />
-                  <input id="scaleZInput" type="number" step="0.01" value="1" />
-                </div>
-              </div>
-            </div>
-
-            <div class="button-row-2" style="margin-top:12px;">
-              <button id="resetTransformsBtn" type="button">Reset transformaciones</button>
-              <button id="downloadStlBtn" type="button">Descargar STL</button>
             </div>
           </div>
+
+
+          <div class="control-group collapsible">
+            <button id="modelCollapseBtn" class="collapse-header" type="button" aria-expanded="true">
+              <span class="collapse-title">Transformaciones del modelo</span>
+              <span class="collapse-arrow">▼</span>
+            </button>
+
+            <div id="modelCollapseContent" class="collapse-content">
+              <div class="hint-inline">Controla posición, rotación y escala del STL.</div>
+
+              <div>
+                <div class="subsection-title">Posición</div>
+                <div class="axis-grid">
+                  <div class="axis-row">
+                    <div class="mini-label">X <span class="value" id="posXLabel">0.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="posXSlider" type="range" min="-1000" max="1000" step="0.1" value="0" />
+                      <input id="posXInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Y <span class="value" id="posYLabel">0.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="posYSlider" type="range" min="-1000" max="1000" step="0.1" value="0" />
+                      <input id="posYInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Z <span class="value" id="posZLabel">0.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="posZSlider" type="range" min="-1000" max="1000" step="0.1" value="0" />
+                      <input id="posZInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div>
+                <div class="subsection-title">Rotación (grados)</div>
+                <div class="axis-grid">
+                  <div class="axis-row">
+                    <div class="mini-label">Rot X <span class="value" id="rotXLabel">0.00°</span></div>
+                    <div class="axis-inputs">
+                      <input id="rotXSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                      <input id="rotXInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Rot Y <span class="value" id="rotYLabel">0.00°</span></div>
+                    <div class="axis-inputs">
+                      <input id="rotYSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                      <input id="rotYInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Rot Z <span class="value" id="rotZLabel">0.00°</span></div>
+                    <div class="axis-inputs">
+                      <input id="rotZSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                      <input id="rotZInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div>
+                <div class="subsection-title">Escala por eje</div>
+                <div class="axis-grid">
+                  <div class="axis-row">
+                    <div class="mini-label">Scale X <span class="value" id="scaleXLabel">1.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="scaleXSlider" type="range" min="0.05" max="8" step="0.01" value="1" />
+                      <input id="scaleXInput" type="number" step="0.01" value="1" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Scale Y <span class="value" id="scaleYLabel">1.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="scaleYSlider" type="range" min="0.05" max="8" step="0.01" value="1" />
+                      <input id="scaleYInput" type="number" step="0.01" value="1" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Scale Z <span class="value" id="scaleZLabel">1.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="scaleZSlider" type="range" min="0.05" max="8" step="0.01" value="1" />
+                      <input id="scaleZInput" type="number" step="0.01" value="1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="button-row-2" style="margin-top:12px;">
+                <button id="resetTransformsBtn" type="button">Reset modelo</button>
+                <button id="downloadStlBtn" type="button">Descargar STL</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-group collapsible">
+            <button id="planeCollapseBtn" class="collapse-header" type="button" aria-expanded="true">
+              <span class="collapse-title">Transformaciones del plano</span>
+              <span class="collapse-arrow">▼</span>
+            </button>
+
+            <div id="planeCollapseContent" class="collapse-content">
+              <div class="hint-inline">Plano inicial estándar: XZ horizontal y Y vertical.</div>
+
+              <div>
+                <div class="subsection-title">Posición del plano</div>
+                <div class="axis-grid">
+                  <div class="axis-row">
+                    <div class="mini-label">Plano X <span class="value" id="planeXLabel">0.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="planeXSlider" type="range" min="-1000" max="1000" step="0.1" value="0" />
+                      <input id="planeXInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Plano Y <span class="value" id="planeYLabel">0.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="planeYSlider" type="range" min="-1000" max="1000" step="0.1" value="0" />
+                      <input id="planeYInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Plano Z <span class="value" id="planeZLabel">0.00</span></div>
+                    <div class="axis-inputs">
+                      <input id="planeZSlider" type="range" min="-1000" max="1000" step="0.1" value="0" />
+                      <input id="planeZInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div>
+                <div class="subsection-title">Rotación del plano (grados)</div>
+                <div class="axis-grid">
+                  <div class="axis-row">
+                    <div class="mini-label">Plano Rot X <span class="value" id="planeRotXLabel">0.00°</span></div>
+                    <div class="axis-inputs">
+                      <input id="planeRotXSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                      <input id="planeRotXInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Plano Rot Y <span class="value" id="planeRotYLabel">0.00°</span></div>
+                    <div class="axis-inputs">
+                      <input id="planeRotYSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                      <input id="planeRotYInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="axis-row">
+                    <div class="mini-label">Plano Rot Z <span class="value" id="planeRotZLabel">0.00°</span></div>
+                    <div class="axis-inputs">
+                      <input id="planeRotZSlider" type="range" min="-180" max="180" step="0.1" value="0" />
+                      <input id="planeRotZInput" type="number" step="0.1" value="0" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="button-row-2" style="margin-top:12px;">
+                <button id="resetPlaneBtn" type="button">Reset plano</button>
+                <button id="levelPlaneBtn" type="button">Nivelar plano</button>
+              </div>
+
+              <div class="divider"></div>
+
+              <div>
+                <div class="subsection-title">Cambiar ejes del plano</div>
+                <div class="hint-inline">
+                  Cambia la orientación base del plano como se usa en distintos entornos de diseño.
+                </div>
+
+                <div class="row">
+                  <label for="planeAxisPreset">Orientación base <span class="value" id="planePresetLabel">Plano XZ (Y arriba)</span></label>
+                  <select id="planeAxisPreset">
+                    <option value="XZ">Plano XZ (Y arriba)</option>
+                    <option value="XY">Plano XY (Z arriba)</option>
+                    <option value="YZ">Plano YZ (X arriba)</option>
+                  </select>
+                </div>
+
+                <div class="button-row-2">
+                  <button id="applyPlaneAxisBtn" type="button">Aplicar ejes</button>
+                  <button id="resetPlaneAxisBtn" type="button">Volver a XZ</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </aside>
 
@@ -578,6 +853,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { STLLoader } from 'three/addons/loaders/STLLoader.js';
     import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+    import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 
     const AIRCRAFT_ORIENTATION_MATRIX = new THREE.Matrix4().set(
       0.9955579, -0.0000289, -0.0941515, 0,
@@ -606,6 +882,7 @@
     const metalValue = $('metalValue');
 
     const resetViewBtn = $('resetViewBtn');
+    const fitScaleViewBtn = $('fitScaleViewBtn');
     const spinBtn = $('spinBtn');
     const wireBtn = $('wireBtn');
     const axesBtn = $('axesBtn');
@@ -613,22 +890,66 @@
     const resetTransformsBtn = $('resetTransformsBtn');
     const downloadStlBtn = $('downloadStlBtn');
 
+    const resetPlaneBtn = $('resetPlaneBtn');
+    const snapPlaneBtn = $('snapPlaneBtn');
+    const levelPlaneBtn = $('levelPlaneBtn');
+
+    const modelCollapseBtn = $('modelCollapseBtn');
+    const modelCollapseContent = $('modelCollapseContent');
+    const planeCollapseBtn = $('planeCollapseBtn');
+    const planeCollapseContent = $('planeCollapseContent');
+    const paintCollapseBtn = $('paintCollapseBtn');
+    const paintCollapseContent = $('paintCollapseContent');
+    const paintToolBtn = $('paintToolBtn');
+    const eraseToolBtn = $('eraseToolBtn');
+    const togglePaintBtn = $('togglePaintBtn');
+    const undoPaintBtn = $('undoPaintBtn');
+    const redoPaintBtn = $('redoPaintBtn');
+    const brushSizeSlider = $('brushSizeSlider');
+    const brushSizeValue = $('brushSizeValue');
+    const paintColorPicker = $('paintColorPicker');
+    const paintHexValue = $('paintHexValue');
+    const paintR = $('paintR');
+    const paintG = $('paintG');
+    const paintB = $('paintB');
+    const paintRValue = $('paintRValue');
+    const paintGValue = $('paintGValue');
+    const paintBValue = $('paintBValue');
+    const paintPreview = $('paintPreview');
+    const paintToolLabel = $('paintToolLabel');
+    const fillPaintBtn = $('fillPaintBtn');
+    const clearPaintBtn = $('clearPaintBtn');
+    const downloadGlbBtn = $('downloadGlbBtn');
+    const downloadColorJsonBtn = $('downloadColorJsonBtn');
+
     const matDefaultBtn = $('matDefaultBtn');
     const matMatteBtn = $('matMatteBtn');
     const matChromeBtn = $('matChromeBtn');
 
-    const controlsMap = {
-      posX: { slider: $('posXSlider'), input: $('posXInput'), label: $('posXLabel'), min: -500, max: 500, def: 0, decimals: 2 },
-      posY: { slider: $('posYSlider'), input: $('posYInput'), label: $('posYLabel'), min: -500, max: 500, def: 0, decimals: 2 },
-      posZ: { slider: $('posZSlider'), input: $('posZInput'), label: $('posZLabel'), min: -500, max: 500, def: 0, decimals: 2 },
+    const planeAxisPreset = $('planeAxisPreset');
+    const planePresetLabel = $('planePresetLabel');
+    const applyPlaneAxisBtn = $('applyPlaneAxisBtn');
+    const resetPlaneAxisBtn = $('resetPlaneAxisBtn');
 
+    const controlsMap = {
+      posX: { slider: $('posXSlider'), input: $('posXInput'), label: $('posXLabel'), min: -1000, max: 1000, def: 0, decimals: 2 },
+      posY: { slider: $('posYSlider'), input: $('posYInput'), label: $('posYLabel'), min: -1000, max: 1000, def: 0, decimals: 2 },
+      posZ: { slider: $('posZSlider'), input: $('posZInput'), label: $('posZLabel'), min: -1000, max: 1000, def: 0, decimals: 2 },
       rotX: { slider: $('rotXSlider'), input: $('rotXInput'), label: $('rotXLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
       rotY: { slider: $('rotYSlider'), input: $('rotYInput'), label: $('rotYLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
       rotZ: { slider: $('rotZSlider'), input: $('rotZInput'), label: $('rotZLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
+      scaleX: { slider: $('scaleXSlider'), input: $('scaleXInput'), label: $('scaleXLabel'), min: 0.05, max: 8, def: 1, decimals: 2 },
+      scaleY: { slider: $('scaleYSlider'), input: $('scaleYInput'), label: $('scaleYLabel'), min: 0.05, max: 8, def: 1, decimals: 2 },
+      scaleZ: { slider: $('scaleZSlider'), input: $('scaleZInput'), label: $('scaleZLabel'), min: 0.05, max: 8, def: 1, decimals: 2 }
+    };
 
-      scaleX: { slider: $('scaleXSlider'), input: $('scaleXInput'), label: $('scaleXLabel'), min: 0.1, max: 5, def: 1, decimals: 2 },
-      scaleY: { slider: $('scaleYSlider'), input: $('scaleYInput'), label: $('scaleYLabel'), min: 0.1, max: 5, def: 1, decimals: 2 },
-      scaleZ: { slider: $('scaleZSlider'), input: $('scaleZInput'), label: $('scaleZLabel'), min: 0.1, max: 5, def: 1, decimals: 2 }
+    const planeControlsMap = {
+      planeX: { slider: $('planeXSlider'), input: $('planeXInput'), label: $('planeXLabel'), min: -1000, max: 1000, def: 0, decimals: 2 },
+      planeY: { slider: $('planeYSlider'), input: $('planeYInput'), label: $('planeYLabel'), min: -1000, max: 1000, def: 0, decimals: 2 },
+      planeZ: { slider: $('planeZSlider'), input: $('planeZInput'), label: $('planeZLabel'), min: -1000, max: 1000, def: 0, decimals: 2 },
+      planeRotX: { slider: $('planeRotXSlider'), input: $('planeRotXInput'), label: $('planeRotXLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
+      planeRotY: { slider: $('planeRotYSlider'), input: $('planeRotYInput'), label: $('planeRotYLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' },
+      planeRotZ: { slider: $('planeRotZSlider'), input: $('planeRotZInput'), label: $('planeRotZLabel'), min: -180, max: 180, def: 0, decimals: 2, suffix: '°' }
     };
 
     const transformState = {
@@ -638,6 +959,26 @@
       uniformScale: 1
     };
 
+    const planeState = {
+      planeX: 0,
+      planeY: 0,
+      planeZ: 0,
+      planeRotX: 0,
+      planeRotY: 0,
+      planeRotZ: 0,
+      planePreset: 'XZ'
+    };
+
+    const paintState = {
+      enabled: false,
+      tool: 'paint',
+      brushSize: 1,
+      color: { r: 255, g: 255, b: 255 },
+      baseColor: { r: 1, g: 1, b: 1 }
+    };
+
+    const paintHistory = [];
+    const redoHistory = [];
     let autoSpin = true;
     let wireframe = false;
     let materialMode = 'Tron';
@@ -646,12 +987,21 @@
     let currentLoadedFileName = 'AVION.stl';
     let baseFitScale = 1;
     let showAxesWidget = true;
+    let faceCenters = [];
+    let isPaintingPointerDown = false;
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const tempVecA = new THREE.Vector3();
+    const tempVecB = new THREE.Vector3();
+    const tempVecC = new THREE.Vector3();
+    const tempVecCenter = new THREE.Vector3();
+    const localHitPoint = new THREE.Vector3();
 
     const canvas = $('scene');
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x060606);
-    scene.fog = new THREE.Fog(0x060606, 40, 260);
+    scene.background = new THREE.Color(0x050505);
+    scene.fog = new THREE.Fog(0x050505, 60, 800);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -662,7 +1012,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.01, 5000);
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.01, 20000);
     camera.position.set(0, 25, 130);
 
     const orbit = new OrbitControls(camera, renderer.domElement);
@@ -670,30 +1020,46 @@
     orbit.dampingFactor = 0.05;
     orbit.screenSpacePanning = true;
     orbit.minDistance = 0.1;
-    orbit.maxDistance = 4000;
+    orbit.maxDistance = 15000;
     orbit.target.set(0, 0, 0);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, parseFloat(lightSlider.value));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    const fillLight = new THREE.DirectionalLight(0xdadada, 0.75);
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.95);
-
-    keyLight.position.set(140, 180, 140);
-    fillLight.position.set(-120, 60, -120);
-    rimLight.position.set(0, 220, -180);
-
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    keyLight.position.set(180, 240, 180);
+    fillLight.position.set(-160, 120, -140);
+    rimLight.position.set(0, 300, -220);
     scene.add(ambientLight, keyLight, fillLight, rimLight);
 
-    const grid = new THREE.GridHelper(1200, 120, 0xffffff, 0x666666);
-    grid.material.opacity = 0.12;
-    grid.material.transparent = true;
-    scene.add(grid);
+    const planeGroup = new THREE.Group();
+    scene.add(planeGroup);
 
-    const axesHelper = new THREE.AxesHelper(80);
+    const planePivot = new THREE.Group();
+    planeGroup.add(planePivot);
+
+    const grid = new THREE.GridHelper(3000, 150, 0xffffff, 0x7f7f7f);
+    grid.material.opacity = 0.25;
+    grid.material.transparent = true;
+    planePivot.add(grid);
+
+    const floorPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(4000, 4000),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.02,
+        side: THREE.DoubleSide
+      })
+    );
+    planePivot.add(floorPlane);
+
+    const axesHelper = new THREE.AxesHelper(120);
     scene.add(axesHelper);
 
     const loader = new STLLoader();
     const exporter = new STLExporter();
+    const gltfExporter = new GLTFExporter();
     const clock = new THREE.Clock();
 
     const axesScene = new THREE.Scene();
@@ -705,14 +1071,12 @@
       alpha: true
     });
     axesRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    axesRenderer.setSize(150, 150);
+    axesRenderer.setSize(155, 155);
     axesViewport.appendChild(axesRenderer.domElement);
 
     const axesGroup = new THREE.Group();
     axesScene.add(axesGroup);
-
-    const axesLight = new THREE.AmbientLight(0xffffff, 1.3);
-    axesScene.add(axesLight);
+    axesScene.add(new THREE.AmbientLight(0xffffff, 1.5));
 
     function setStatus(message) {
       statusEl.textContent = message;
@@ -728,7 +1092,26 @@
       return THREE.MathUtils.degToRad(deg);
     }
 
+    function radToDeg(rad) {
+      return THREE.MathUtils.radToDeg(rad);
+    }
+
+    function rgbToHex(r, g, b) {
+      const toHex = (v) => clamp(v, 0, 255, 0).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    function hexToRgb(hex) {
+      const clean = String(hex).replace('#', '').trim();
+      return {
+        r: parseInt(clean.slice(0, 2), 16) || 0,
+        g: parseInt(clean.slice(2, 4), 16) || 0,
+        b: parseInt(clean.slice(4, 6), 16) || 0
+      };
+    }
+
     function hueToLabel(hue) {
+      if (hue === 0) return 'Blanco';
       if (hue < 15 || hue >= 345) return 'Rojo';
       if (hue < 45) return 'Naranja';
       if (hue < 70) return 'Amarillo';
@@ -739,28 +1122,259 @@
       return 'Magenta';
     }
 
+    function presetLabel(preset) {
+      if (preset === 'XY') return 'Plano XY (Z arriba)';
+      if (preset === 'YZ') return 'Plano YZ (X arriba)';
+      return 'Plano XZ (Y arriba)';
+    }
+
+    function updatePlanePresetUI() {
+      planeAxisPreset.value = planeState.planePreset;
+      planePresetLabel.textContent = presetLabel(planeState.planePreset);
+    }
+
     function getToneColor() {
       const hue = parseFloat(colorSlider.value);
       const isNeutral = hue === 0;
-      const label = isNeutral ? 'Neutro' : hueToLabel(hue);
+      const label = hueToLabel(hue);
       const color = isNeutral
-        ? new THREE.Color(0xd9d9d9)
-        : new THREE.Color().setHSL(hue / 360, 0.18, 0.78);
-
+        ? new THREE.Color(0xffffff)
+        : new THREE.Color().setHSL(hue / 360, 0.68, 0.56);
       colorValue.textContent = label;
       return { color, label };
     }
 
     function buildMaterial() {
       return new THREE.MeshPhysicalMaterial({
-        color: 0xd9d9d9,
+        color: 0xffffff,
         metalness: parseFloat(metalSlider.value),
-        roughness: 0.32,
-        clearcoat: 0.35,
-        clearcoatRoughness: 0.30,
-        emissive: new THREE.Color(0x111111),
-        side: THREE.DoubleSide
+        roughness: 0.26,
+        clearcoat: 0.55,
+        clearcoatRoughness: 0.18,
+        emissive: new THREE.Color(0x141414),
+        emissiveIntensity: 0.45,
+        side: THREE.DoubleSide,
+        vertexColors: true
       });
+    }
+
+    function updatePaintControls() {
+      const { r, g, b } = paintState.color;
+      const hex = rgbToHex(r, g, b);
+      brushSizeSlider.value = paintState.brushSize;
+      brushSizeValue.textContent = String(paintState.brushSize);
+      paintR.value = r;
+      paintG.value = g;
+      paintB.value = b;
+      paintRValue.textContent = String(r);
+      paintGValue.textContent = String(g);
+      paintBValue.textContent = String(b);
+      paintColorPicker.value = hex;
+      paintHexValue.textContent = hex;
+      paintPreview.style.background = `rgb(${r}, ${g}, ${b})`;
+      paintToolLabel.textContent = paintState.tool === 'paint' ? 'Pintar' : 'Borrar';
+      paintToolBtn.classList.toggle('active', paintState.tool === 'paint');
+      eraseToolBtn.classList.toggle('active', paintState.tool === 'erase');
+      togglePaintBtn.classList.toggle('active', paintState.enabled);
+      canvas.classList.toggle('painting', paintState.enabled);
+    }
+
+    function setPaintColor(r, g, b) {
+      paintState.color.r = clamp(r, 0, 255, 255);
+      paintState.color.g = clamp(g, 0, 255, 255);
+      paintState.color.b = clamp(b, 0, 255, 255);
+      updatePaintControls();
+    }
+
+    function ensureColorAttribute(geometry) {
+      if (geometry.index) {
+        geometry = geometry.toNonIndexed();
+      }
+      if (!geometry.getAttribute('color')) {
+        const count = geometry.attributes.position.count;
+        const colors = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+          colors[i * 3] = 1;
+          colors[i * 3 + 1] = 1;
+          colors[i * 3 + 2] = 1;
+        }
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      }
+      return geometry;
+    }
+
+    function rebuildFaceCenters() {
+      faceCenters = [];
+      if (!currentMesh) return;
+      const pos = currentMesh.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i += 3) {
+        tempVecA.fromBufferAttribute(pos, i);
+        tempVecB.fromBufferAttribute(pos, i + 1);
+        tempVecC.fromBufferAttribute(pos, i + 2);
+        tempVecCenter.copy(tempVecA).add(tempVecB).add(tempVecC).multiplyScalar(1 / 3);
+        faceCenters.push(tempVecCenter.clone());
+      }
+    }
+
+    function snapshotColors() {
+      if (!currentMesh) return null;
+      const arr = currentMesh.geometry.attributes.color.array;
+      return new Float32Array(arr);
+    }
+
+    function applyColorSnapshot(snapshot) {
+      if (!currentMesh || !snapshot) return;
+      currentMesh.geometry.attributes.color.array.set(snapshot);
+      currentMesh.geometry.attributes.color.needsUpdate = true;
+    }
+
+    function pushUndoState() {
+      const snap = snapshotColors();
+      if (!snap) return;
+      paintHistory.push(snap);
+      if (paintHistory.length > 50) paintHistory.shift();
+      redoHistory.length = 0;
+    }
+
+    function undoPaint() {
+      if (!currentMesh || paintHistory.length === 0) {
+        setStatus('No hay cambios para deshacer.');
+        return;
+      }
+      redoHistory.push(snapshotColors());
+      const prev = paintHistory.pop();
+      applyColorSnapshot(prev);
+      setStatus('Último trazo deshecho.');
+    }
+
+    function redoPaintAction() {
+      if (!currentMesh || redoHistory.length === 0) {
+        setStatus('No hay cambios para rehacer.');
+        return;
+      }
+      paintHistory.push(snapshotColors());
+      const next = redoHistory.pop();
+      applyColorSnapshot(next);
+      setStatus('Trazo rehecho.');
+    }
+
+    function paintFacesAround(faceIndex, hitPointLocal) {
+      if (!currentMesh) return 0;
+      const colorAttr = currentMesh.geometry.attributes.color;
+      const radius = Number(paintState.brushSize);
+      const radiusSq = radius * radius;
+      let changed = 0;
+
+      for (let f = 0; f < faceCenters.length; f++) {
+        const center = faceCenters[f];
+        if (center.distanceToSquared(hitPointLocal) <= radiusSq) {
+          const baseVertex = f * 3;
+          for (let v = 0; v < 3; v++) {
+            const i = (baseVertex + v) * 3;
+            if (paintState.tool === 'erase') {
+              colorAttr.array[i] = paintState.baseColor.r;
+              colorAttr.array[i + 1] = paintState.baseColor.g;
+              colorAttr.array[i + 2] = paintState.baseColor.b;
+            } else {
+              colorAttr.array[i] = paintState.color.r / 255;
+              colorAttr.array[i + 1] = paintState.color.g / 255;
+              colorAttr.array[i + 2] = paintState.color.b / 255;
+            }
+          }
+          changed++;
+        }
+      }
+
+      colorAttr.needsUpdate = true;
+      return changed;
+    }
+
+    function getLocalPointerHit(event) {
+      if (!currentMesh) return null;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObject(currentMesh, false);
+      if (!hits.length) return null;
+      const hit = hits[0];
+      currentMesh.worldToLocal(localHitPoint.copy(hit.point));
+      return { hit, localPoint: localHitPoint.clone() };
+    }
+
+    function handlePaintStroke(event, beginStroke = false) {
+      if (!paintState.enabled || !currentMesh) return;
+      const hitData = getLocalPointerHit(event);
+      if (!hitData) return;
+      if (beginStroke) pushUndoState();
+      const changed = paintFacesAround(hitData.hit.faceIndex, hitData.localPoint);
+      if (changed > 0) {
+        setStatus(paintState.tool === 'paint' ? 'Pintando modelo...' : 'Borrando pintura...');
+      }
+    }
+
+    function paintEntireModel(useErase = false) {
+      if (!currentMesh) {
+        setStatus('Primero carga un STL.');
+        return;
+      }
+      pushUndoState();
+      const colorAttr = currentMesh.geometry.attributes.color;
+      const r = useErase ? paintState.baseColor.r : paintState.color.r / 255;
+      const g = useErase ? paintState.baseColor.g : paintState.color.g / 255;
+      const b = useErase ? paintState.baseColor.b : paintState.color.b / 255;
+      for (let i = 0; i < colorAttr.count; i++) {
+        colorAttr.array[i * 3] = r;
+        colorAttr.array[i * 3 + 1] = g;
+        colorAttr.array[i * 3 + 2] = b;
+      }
+      colorAttr.needsUpdate = true;
+      setStatus(useErase ? 'Pintura eliminada del modelo.' : 'Todo el modelo fue pintado.');
+    }
+
+    function downloadColorJson() {
+      if (!currentMesh) {
+        setStatus('Primero carga un STL.');
+        return;
+      }
+      const arr = Array.from(currentMesh.geometry.attributes.color.array);
+      const payload = {
+        file: currentLoadedFileName,
+        colors: arr
+      };
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentLoadedFileName.replace(/\.stl$/i, '')}_colores.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus('Colores guardados en JSON.');
+    }
+
+    function downloadColoredGlb() {
+      if (!currentMesh) {
+        setStatus('Primero carga un STL.');
+        return;
+      }
+      gltfExporter.parse(
+        currentMesh,
+        (result) => {
+          const blob = new Blob([result], { type: 'model/gltf-binary' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${currentLoadedFileName.replace(/\.stl$/i, '')}_coloreado.glb`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          setStatus('GLB exportado con colores.');
+        },
+        { binary: true }
+      );
     }
 
     function applyMaterialStyle() {
@@ -770,27 +1384,31 @@
       const { color } = getToneColor();
       const metalnessValue = parseFloat(metalSlider.value);
 
-      material.color.copy(color);
+      material.vertexColors = true;
+      material.color.set(0xffffff);
       material.wireframe = wireframe;
 
       if (materialMode === 'Mate') {
-        material.metalness = 0.05;
-        material.roughness = 0.82;
-        material.clearcoat = 0.08;
-        material.clearcoatRoughness = 0.80;
-        material.emissive.copy(color).multiplyScalar(0.03);
+        material.metalness = 0.03;
+        material.roughness = 0.72;
+        material.clearcoat = 0.05;
+        material.clearcoatRoughness = 0.85;
+        material.emissive.copy(color).multiplyScalar(0.06);
+        material.emissiveIntensity = 0.35;
       } else if (materialMode === 'Chrome') {
-        material.metalness = 0.95;
-        material.roughness = 0.16;
-        material.clearcoat = 0.9;
-        material.clearcoatRoughness = 0.08;
-        material.emissive.copy(color).multiplyScalar(0.02);
+        material.metalness = 1.0;
+        material.roughness = 0.08;
+        material.clearcoat = 1.0;
+        material.clearcoatRoughness = 0.04;
+        material.emissive.copy(color).multiplyScalar(0.03);
+        material.emissiveIntensity = 0.20;
       } else {
         material.metalness = metalnessValue;
-        material.roughness = 0.32;
-        material.clearcoat = 0.35;
-        material.clearcoatRoughness = 0.30;
-        material.emissive.copy(color).multiplyScalar(0.12);
+        material.roughness = 0.24;
+        material.clearcoat = 0.55;
+        material.clearcoatRoughness = 0.18;
+        material.emissive.copy(color).multiplyScalar(0.08);
+        material.emissiveIntensity = 0.30;
       }
 
       material.needsUpdate = true;
@@ -811,9 +1429,18 @@
         cfg.input.value = Number(value).toFixed(cfg.decimals);
       });
 
+      Object.entries(planeControlsMap).forEach(([key, cfg]) => {
+        const value = planeState[key];
+        const suffix = cfg.suffix || '';
+        cfg.label.textContent = `${Number(value).toFixed(cfg.decimals)}${suffix}`;
+        cfg.slider.value = value;
+        cfg.input.value = Number(value).toFixed(cfg.decimals);
+      });
+
       uniformScaleValue.textContent = `${transformState.uniformScale.toFixed(2)}x`;
       uniformScaleSlider.value = transformState.uniformScale;
       hudScale.textContent = `${transformState.uniformScale.toFixed(2)}x`;
+      updatePlanePresetUI();
     }
 
     function applyTransformsToMesh() {
@@ -834,10 +1461,36 @@
         transformState.posY,
         transformState.posZ
       );
+    }
 
-      const box = new THREE.Box3().setFromObject(currentMesh);
-      grid.position.y = box.min.y;
-      axesHelper.position.set(0, box.min.y, 0);
+    function getPresetQuaternion(preset) {
+      const q = new THREE.Quaternion();
+
+      if (preset === 'XY') {
+        q.setFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
+      } else if (preset === 'YZ') {
+        q.setFromEuler(new THREE.Euler(0, 0, Math.PI / 2, 'XYZ'));
+      } else {
+        q.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0, 'XYZ'));
+      }
+
+      return q;
+    }
+
+    function applyPlaneTransforms() {
+      planeGroup.position.set(
+        planeState.planeX,
+        planeState.planeY,
+        planeState.planeZ
+      );
+
+      planeGroup.rotation.set(
+        degToRad(planeState.planeRotX),
+        degToRad(planeState.planeRotY),
+        degToRad(planeState.planeRotZ)
+      );
+
+      planePivot.quaternion.copy(getPresetQuaternion(planeState.planePreset));
     }
 
     function fitCameraToObject(object) {
@@ -848,15 +1501,15 @@
       const maxDim = Math.max(size.x, size.y, size.z) || 1;
       const fov = THREE.MathUtils.degToRad(camera.fov);
       let distance = maxDim / (2 * Math.tan(fov / 2));
-      distance *= 1.8;
+      distance *= 2.0;
 
-      camera.near = Math.max(distance / 1000, 0.01);
-      camera.far = Math.max(distance * 50, 2000);
+      camera.near = Math.max(distance / 2000, 0.01);
+      camera.far = Math.max(distance * 100, 5000);
       camera.updateProjectionMatrix();
 
       camera.position.set(
-        center.x + distance * 0.22,
-        center.y + distance * 0.30,
+        center.x + distance * 0.24,
+        center.y + distance * 0.32,
         center.z + distance
       );
 
@@ -876,11 +1529,9 @@
       transformState.posX = 0;
       transformState.posY = 0;
       transformState.posZ = 0;
-
       transformState.rotX = 0;
       transformState.rotY = 0;
       transformState.rotZ = 0;
-
       transformState.scaleX = 1;
       transformState.scaleY = 1;
       transformState.scaleZ = 1;
@@ -889,7 +1540,46 @@
       updateAllControlLabels();
       applyTransformsToMesh();
 
-      if (!silent) setStatus('Transformaciones reiniciadas.');
+      if (!silent) setStatus('Transformaciones del modelo reiniciadas.');
+    }
+
+    function resetPlane(silent = false) {
+      planeState.planeX = 0;
+      planeState.planeY = 0;
+      planeState.planeZ = 0;
+      planeState.planeRotX = 0;
+      planeState.planeRotY = 0;
+      planeState.planeRotZ = 0;
+      planeState.planePreset = 'XZ';
+
+      updateAllControlLabels();
+      applyPlaneTransforms();
+
+      if (!silent) setStatus('Plano reiniciado a XZ estándar.');
+    }
+
+    function levelPlane() {
+      planeState.planeRotX = 0;
+      planeState.planeRotY = 0;
+      planeState.planeRotZ = 0;
+      updateAllControlLabels();
+      applyPlaneTransforms();
+      setStatus(`Plano nivelado en ${presetLabel(planeState.planePreset)}.`);
+    }
+
+    function snapPlaneToModel() {
+      if (!currentMesh) {
+        setStatus('Primero carga un STL.');
+        return;
+      }
+
+      planeState.planeX = transformState.posX;
+      planeState.planeY = transformState.posY;
+      planeState.planeZ = transformState.posZ;
+
+      updateAllControlLabels();
+      applyPlaneTransforms();
+      setStatus('Plano alineado a la posición del modelo.');
     }
 
     function setTransformValue(key, value) {
@@ -900,13 +1590,32 @@
       applyTransformsToMesh();
     }
 
+    function setPlaneValue(key, value) {
+      const cfg = planeControlsMap[key];
+      const safe = clamp(value, cfg.min, cfg.max, cfg.def);
+      planeState[key] = safe;
+      updateAllControlLabels();
+      applyPlaneTransforms();
+    }
+
     function setUniformScale(value) {
-      transformState.uniformScale = clamp(value, 0.2, 4, 1);
+      transformState.uniformScale = clamp(value, 0.1, 8, 1);
       updateAllControlLabels();
       applyTransformsToMesh();
     }
 
+    function applyPlanePreset(preset) {
+      planeState.planePreset = preset;
+      planeState.planeRotX = 0;
+      planeState.planeRotY = 0;
+      planeState.planeRotZ = 0;
+      updateAllControlLabels();
+      applyPlaneTransforms();
+      setStatus(`Orientación base aplicada: ${presetLabel(preset)}.`);
+    }
+
     function prepareGeometry(geometry) {
+      geometry = ensureColorAttribute(geometry);
       geometry.computeBoundingBox();
       geometry.computeBoundingSphere();
       geometry.computeVertexNormals();
@@ -943,6 +1652,9 @@
       hudFile.textContent = displayName;
 
       baseFitScale = computeBaseFitScale(geometry);
+      paintHistory.length = 0;
+      redoHistory.length = 0;
+      rebuildFaceCenters();
       resetTransforms(true);
       applyMaterialStyle();
       applyTransformsToMesh();
@@ -1074,21 +1786,21 @@
       }
     }
 
-    function createAxisLine(direction, length = 1.6) {
+    function createAxisLine(direction, colorHex, length = 1.7) {
       const points = [new THREE.Vector3(0, 0, 0), direction.clone().multiplyScalar(length)];
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+      const material = new THREE.LineBasicMaterial({ color: colorHex });
       return new THREE.Line(geometry, material);
     }
 
-    function createTextSprite(text) {
+    function createTextSprite(text, color = '#ffffff') {
       const canvas = document.createElement('canvas');
       canvas.width = 128;
       canvas.height = 128;
 
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = color;
       ctx.font = 'bold 72px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -1103,17 +1815,17 @@
       });
 
       const sprite = new THREE.Sprite(material);
-      sprite.scale.set(0.55, 0.55, 0.55);
+      sprite.scale.set(0.58, 0.58, 0.58);
       return sprite;
     }
 
-    const axisX = createAxisLine(new THREE.Vector3(1, 0, 0));
-    const axisY = createAxisLine(new THREE.Vector3(0, 1, 0));
-    const axisZ = createAxisLine(new THREE.Vector3(0, 0, 1));
+    const axisX = createAxisLine(new THREE.Vector3(1, 0, 0), 0xff4040);
+    const axisY = createAxisLine(new THREE.Vector3(0, 1, 0), 0x40ff6a);
+    const axisZ = createAxisLine(new THREE.Vector3(0, 0, 1), 0x4aa3ff);
 
-    const labelX = createTextSprite('X');
-    const labelY = createTextSprite('Y');
-    const labelZ = createTextSprite('Z');
+    const labelX = createTextSprite('X', '#ff5050');
+    const labelY = createTextSprite('Y', '#50ff78');
+    const labelZ = createTextSprite('Z', '#5ab0ff');
 
     labelX.position.set(2.0, 0, 0);
     labelY.position.set(0, 2.0, 0);
@@ -1132,7 +1844,6 @@
       }
 
       axesGroup.quaternion.copy(camera.quaternion);
-
       labelX.quaternion.copy(axesCamera.quaternion);
       labelY.quaternion.copy(axesCamera.quaternion);
       labelZ.quaternion.copy(axesCamera.quaternion);
@@ -1140,9 +1851,21 @@
       axesRenderer.render(axesScene, axesCamera);
     }
 
+    function toggleCollapse(button, content) {
+      const isExpanded = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!isExpanded));
+      button.classList.toggle('collapsed', isExpanded);
+      content.classList.toggle('hidden', isExpanded);
+    }
+
     Object.entries(controlsMap).forEach(([key, cfg]) => {
       cfg.slider.addEventListener('input', () => setTransformValue(key, cfg.slider.value));
       cfg.input.addEventListener('input', () => setTransformValue(key, cfg.input.value));
+    });
+
+    Object.entries(planeControlsMap).forEach(([key, cfg]) => {
+      cfg.slider.addEventListener('input', () => setPlaneValue(key, cfg.slider.value));
+      cfg.input.addEventListener('input', () => setPlaneValue(key, cfg.input.value));
     });
 
     uniformScaleSlider.addEventListener('input', () => {
@@ -1164,6 +1887,9 @@
     lightSlider.addEventListener('input', () => {
       const intensity = parseFloat(lightSlider.value);
       ambientLight.intensity = intensity;
+      keyLight.intensity = intensity * 1.25;
+      fillLight.intensity = intensity * 0.72;
+      rimLight.intensity = intensity * 0.88;
       lightValue.textContent = intensity.toFixed(2);
     });
 
@@ -1172,18 +1898,34 @@
       applyMaterialStyle();
     });
 
-    resetTransformsBtn.addEventListener('click', () => {
-      resetTransforms();
+    resetTransformsBtn.addEventListener('click', () => resetTransforms());
+    resetPlaneBtn.addEventListener('click', () => resetPlane());
+    snapPlaneBtn.addEventListener('click', () => snapPlaneToModel());
+    levelPlaneBtn.addEventListener('click', () => levelPlane());
+    downloadStlBtn.addEventListener('click', () => downloadAdjustedStl());
+
+    applyPlaneAxisBtn.addEventListener('click', () => {
+      applyPlanePreset(planeAxisPreset.value);
     });
 
-    downloadStlBtn.addEventListener('click', () => {
-      downloadAdjustedStl();
+    resetPlaneAxisBtn.addEventListener('click', () => {
+      applyPlanePreset('XZ');
+    });
+
+    planeAxisPreset.addEventListener('change', () => {
+      planePresetLabel.textContent = presetLabel(planeAxisPreset.value);
     });
 
     resetViewBtn.addEventListener('click', () => {
       if (!currentMesh) return;
       fitCameraToObject(currentMesh);
       setStatus('Vista reiniciada.');
+    });
+
+    fitScaleViewBtn.addEventListener('click', () => {
+      if (!currentMesh) return;
+      fitCameraToObject(currentMesh);
+      setStatus('Cámara ajustada al tamaño actual del modelo.');
     });
 
     spinBtn.addEventListener('click', () => {
@@ -1204,6 +1946,77 @@
       axesBtn.classList.toggle('active', showAxesWidget);
       axesViewport.classList.toggle('hidden', !showAxesWidget);
       setStatus(showAxesWidget ? 'Visor de ejes activado.' : 'Visor de ejes oculto.');
+    });
+
+    modelCollapseBtn.addEventListener('click', () => {
+      toggleCollapse(modelCollapseBtn, modelCollapseContent);
+    });
+
+    planeCollapseBtn.addEventListener('click', () => {
+      toggleCollapse(planeCollapseBtn, planeCollapseContent);
+    });
+
+    paintCollapseBtn.addEventListener('click', () => {
+      toggleCollapse(paintCollapseBtn, paintCollapseContent);
+    });
+
+    paintToolBtn.addEventListener('click', () => {
+      paintState.tool = 'paint';
+      updatePaintControls();
+      setStatus('Modo pintar activado.');
+    });
+
+    eraseToolBtn.addEventListener('click', () => {
+      paintState.tool = 'erase';
+      updatePaintControls();
+      setStatus('Modo borrar activado.');
+    });
+
+    togglePaintBtn.addEventListener('click', () => {
+      paintState.enabled = !paintState.enabled;
+      if (!paintState.enabled) isPaintingPointerDown = false;
+      updatePaintControls();
+      setStatus(paintState.enabled ? 'Pincel activado.' : 'Pincel desactivado.');
+    });
+
+    brushSizeSlider.addEventListener('input', () => {
+      paintState.brushSize = clamp(brushSizeSlider.value, 1, 120, 1);
+      updatePaintControls();
+    });
+
+    paintColorPicker.addEventListener('input', () => {
+      const rgb = hexToRgb(paintColorPicker.value);
+      setPaintColor(rgb.r, rgb.g, rgb.b);
+    });
+
+    [paintR, paintG, paintB].forEach((input) => {
+      input.addEventListener('input', () => {
+        setPaintColor(paintR.value, paintG.value, paintB.value);
+      });
+    });
+
+    undoPaintBtn.addEventListener('click', undoPaint);
+    redoPaintBtn.addEventListener('click', redoPaintAction);
+    fillPaintBtn.addEventListener('click', () => paintEntireModel(false));
+    clearPaintBtn.addEventListener('click', () => paintEntireModel(true));
+    downloadGlbBtn.addEventListener('click', downloadColoredGlb);
+    downloadColorJsonBtn.addEventListener('click', downloadColorJson);
+
+    renderer.domElement.addEventListener('pointerdown', (event) => {
+      if (!paintState.enabled || !currentMesh) return;
+      isPaintingPointerDown = true;
+      orbit.enabled = false;
+      handlePaintStroke(event, true);
+    });
+
+    window.addEventListener('pointermove', (event) => {
+      if (!paintState.enabled || !isPaintingPointerDown || !currentMesh) return;
+      handlePaintStroke(event, false);
+    });
+
+    window.addEventListener('pointerup', () => {
+      isPaintingPointerDown = false;
+      orbit.enabled = !paintState.enabled;
     });
 
     const materialButtons = [matDefaultBtn, matMatteBtn, matChromeBtn];
@@ -1236,8 +2049,8 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
       const rect = axesViewport.getBoundingClientRect();
-      axesRenderer.setSize(rect.width || 150, rect.height || 150, false);
-      axesCamera.aspect = (rect.width || 150) / (rect.height || 150);
+      axesRenderer.setSize(rect.width || 155, rect.height || 155, false);
+      axesCamera.aspect = (rect.width || 155) / (rect.height || 155);
       axesCamera.updateProjectionMatrix();
     });
 
@@ -1259,6 +2072,8 @@
     lightValue.textContent = parseFloat(lightSlider.value).toFixed(2);
     metalValue.textContent = parseFloat(metalSlider.value).toFixed(2);
     getToneColor();
+    updatePaintControls();
+    applyPlaneTransforms();
     animate();
     tryAutoLoadDefaultModel();
   </script>
